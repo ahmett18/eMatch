@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>eMatch Arena</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f; --bg-secondary: #12121a; --bg-card: rgba(18, 18, 26, 0.85);
+            --fg: #e6edf3; --fg-muted: #7d8590;
+            --accent-gold: #ffd700; --accent-gold-dark: #b8860b;
+            --accent-neon: #00ff88; --border: rgba(255, 215, 0, 0.12);
+            --danger: #ff4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { font-family: 'Rajdhani', sans-serif; background: var(--bg-primary); color: var(--fg); overflow: hidden; height: 100%; width: 100%; }
+        h1, h2, h3, h4 { font-family: 'Orbitron', monospace; }
+
+        .app-container { position: relative; width: 100%; height: 100%; max-width: 500px; margin: 0 auto; background: var(--bg-primary); overflow: hidden; box-shadow: 0 0 80px rgba(255,215,0,0.05); }
+        #particles-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        
+        /* Navigation */
+        .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; height: 75px; background: rgba(10,10,15,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom, 0); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; cursor: pointer; transition: all 0.3s ease; position: relative; }
+        .nav-item svg { width: 24px; height: 24px; stroke: var(--fg-muted); transition: all 0.3s ease; fill: none; stroke-width: 2; }
+        .nav-item span { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fg-muted); transition: all 0.3s ease; }
+        .nav-item.active svg { stroke: var(--accent-gold); filter: drop-shadow(0 0 8px var(--accent-gold)); }
+        .nav-item.active span { color: var(--accent-gold); }
+        .nav-item.active::before { content: ''; position: absolute; top: -1px; left: 50%; transform: translateX(-50%); width: 40px; height: 3px; background: var(--accent-gold); border-radius: 0 0 4px 4px; }
+
+        /* Pages */
+        .page { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 0 0 80px 0; overflow-y: auto; z-index: 1; opacity: 0; transform: translateX(100%); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; background: transparent; }
+        .page.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+
+        /* Top Header */
+        .top-header { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.9); backdrop-filter: blur(20px); padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        
+        /* Cards & Buttons */
+        .glass-card { background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: all 0.3s ease; margin-bottom: 16px; }
+        .btn-primary { padding: 14px 28px; background: linear-gradient(135deg, var(--accent-gold), var(--accent-gold-dark)); color: var(--bg-primary); font-family: 'Orbitron', monospace; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; border: none; border-radius: 12px; cursor: pointer; width: 100%; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--fg); }
+        
+        /* Profile Styles */
+        .profile-header { text-align: center; padding: 40px 20px 20px; background: linear-gradient(180deg, rgba(255,215,0,0.05) 0%, transparent 100%); position: relative; }
+        
+        /* Avatar Container with Edit Button */
+        .avatar-container { position: relative; width: 100px; height: 100px; margin: 0 auto 16px; }
+        .avatar { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, var(--accent-gold), var(--accent-neon)); padding: 3px; box-shadow: 0 0 20px rgba(255,215,0,0.2); cursor: pointer; }
+        .avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--bg-primary); }
+        .edit-avatar-btn { position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; background: var(--accent-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg-primary); cursor: pointer; }
+        .edit-avatar-btn svg { width: 16px; height: 16px; stroke: var(--bg-primary); fill: none; stroke-width: 2; }
+
+        .user-rank { display: inline-block; padding: 4px 12px; background: rgba(255,215,0,0.1); border: 1px solid var(--accent-gold); border-radius: 50px; font-size: 0.7rem; font-family: 'Orbitron'; color: var(--accent-gold); margin-top: 8px; }
+        
+        /* User ID Display */
+        .user-id-box { background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 8px; margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); }
+        .user-id-box span { font-size: 0.75rem; color: var(--fg-muted); }
+        .user-id-box code { font-family: 'Orbitron'; font-size: 0.7rem; color: var(--accent-neon); }
+
+        .profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; text-align: center; }
+        .stat-item { padding: 10px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid var(--border); }
+        .stat-value { font-family: 'Orbitron'; font-size: 1.2rem; color: var(--accent-gold); }
+        .stat-label { font-size: 0.7rem; color: var(--fg-muted); text-transform: uppercase; }
+        .wallet-mini { display: flex; align-items: center; justify-content: space-between; background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.2); border-radius: 12px; padding: 16px; margin-bottom: 20px; }
+        
+        /* Menu Items */
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.2s; }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item:active { background: rgba(255,255,255,0.05); }
+        .menu-left { display: flex; align-items: center; gap: 12px; }
+        .menu-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; }
+        .menu-icon svg { width: 20px; height: 20px; stroke: var(--accent-gold); fill: none; stroke-width: 2; }
+        
+        /* Toggle Switch */
+        .switch { position: relative; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-gold); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Referral Card */
+        .referral-card { background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.02)); border: 1px solid var(--accent-gold); border-radius: 16px; padding: 20px; margin-bottom: 20px; text-align: center; }
+        .referral-code { font-family: 'Orbitron'; font-size: 1.2rem; letter-spacing: 2px; color: var(--accent-gold); margin: 10px 0; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content { width: 90%; max-width: 400px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 20px; padding: 24px; transform: scale(0.9); transition: transform 0.3s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .modal-title { font-family: 'Orbitron'; font-size: 1.1rem; color: var(--accent-gold); margin-bottom: 20px; text-align: center; }
+        .modal-input { width: 100%; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; color: var(--fg); font-size: 1rem; margin-bottom: 12px; }
+        .modal-input:focus { outline: none; border-color: var(--accent-gold); }
+        .modal-btn-group { display: flex; gap: 10px; margin-top: 20px; }
+
+        /* File Input Styling */
+        .file-input-wrapper { position: relative; width: 100%; margin-bottom: 12px; }
+        .file-input-wrapper input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+        .file-input-display { padding: 14px; background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 10px; text-align: center; color: var(--fg-muted); font-size: 0.9rem; }
+        .preview-image { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-top: 10px; border: 2px solid var(--accent-gold); display: none; }
+
+        /* Others */
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--fg-muted); }
+        .loader { border: 3px solid var(--border); border-top: 3px solid var(--accent-gold); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .tournament-card { margin-bottom: 0; }
+        .tournament-banner { height: 140px; overflow: hidden; position: relative; }
+        .tournament-banner img { width: 100%; height: 100%; object-fit: cover; }
+        .prize-badge { position: absolute; top: 12px; right: 12px; padding: 6px 12px; background: rgba(0,0,0,0.8); border: 1px solid var(--accent-gold); border-radius: 8px; }
+        .tag { display: inline-block; padding: 4px 8px; background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); border-radius: 6px; font-size: 0.65rem; color: var(--accent-neon); margin-right: 4px; }
+        .status-live { background: rgba(255,0,0,0.2); color: #ff4444; border-color: #ff4444; }
+        .status-upcoming { background: rgba(255,215,0,0.15); color: var(--accent-gold); border-color: var(--accent-gold); }
+        .live-pulse { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,0,0,0.2); border: 1px solid #ff4444; border-radius: 50px; font-size: 0.65rem; font-weight: 700; color: #ff4444; text-transform: uppercase; }
+        .live-pulse::before { content: ''; width: 6px; height: 6px; background: #ff4444; border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .notif-panel { position: fixed; top: 0; right: -100%; width: 85%; max-width: 350px; height: 100%; background: var(--bg-secondary); border-left: 1px solid var(--border); z-index: 2000; transition: right 0.3s ease; }
+        .notif-panel.open { right: 0; }
+        .notif-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .notif-overlay.show { opacity: 1; pointer-events: auto; }
+        .notif-item { padding: 16px; border-bottom: 1px solid var(--border); }
+        .notif-badge { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; background: var(--danger); border-radius: 50%; font-size: 0.6rem; font-family: 'Orbitron'; display: none; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        .notif-badge.show { display: flex; }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    <div class="app-container">
+        
+        <!-- HOME PAGE -->
+        <div class="page active" id="page-home">
+            <div class="top-header">
+                <h1 style="font-size:1.1rem;">Welcome, <span id="homeUserName">Gamer</span></h1>
+                <button class="notif-btn" style="background:none;border:none;position:relative;" onclick="toggleNotifPanel()">
+                    <svg style="width:24px;height:24px;stroke:var(--fg-muted);fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <div class="notif-badge" id="notifBadge">0</div>
+                </button>
+            </div>
+            
+            <div style="padding: 20px;">
+                <div class="wallet-mini">
+                    <div>
+                        <div style="font-size:0.8rem;color:var(--fg-muted);">Available Balance</div>
+                        <div style="font-family:'Orbitron';color:var(--accent-neon);font-size:1.2rem;" id="homeBalance">0 Coins</div>
+                    </div>
+                    <button class="btn-primary" style="width:auto;padding:8px 16px;font-size:0.65rem;" onclick="navigateTo('shop')">Top Up</button>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+                    <div class="glass-card" style="padding:16px;text-align:center;" onclick="navigateTo('arena')">
+                        <svg style="width:24px;height:24px;margin:0 auto 8px;stroke:var(--accent-gold);fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        <span style="font-size:0.75rem;font-weight:600;">Tournaments</span>
+                    </div>
+                    <div class="glass-card" style="padding:16px;text-align:center;" onclick="navigateTo('live')">
+                        <svg style="width:24px;height:24px;margin:0 auto 8px;stroke:#ff4444;fill:none;stroke-width:2;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                        <span style="font-size:0.75rem;font-weight:600;">Live</span>
+                    </div>
+                    <div class="glass-card" style="padding:16px;text-align:center;" onclick="navigateTo('shop')">
+                        <svg style="width:24px;height:24px;margin:0 auto 8px;stroke:var(--accent-neon);fill:none;stroke-width:2;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10l4-4 4 4"/></svg>
+                        <span style="font-size:0.75rem;font-weight:600;">Shop</span>
+                    </div>
+                </div>
+                <h2 style="font-size:1rem;margin-bottom:12px;">Featured Tournaments</h2>
+                <div id="homeTournaments"><div class="loader"></div></div>
+            </div>
+        </div>
+
+        <!-- ARENA PAGE -->
+        <div class="page" id="page-arena">
+            <div class="top-header"><h1 style="font-size:1rem;">Tournament Arena</h1></div>
+            <div style="padding:20px;" id="arenaTournaments"><div class="loader"></div></div>
+        </div>
+
+        <!-- LIVE PAGE -->
+        <div class="page" id="page-live">
+            <div class="top-header">
+                <h1 style="font-size:1rem;">Live Matches</h1>
+                <div class="live-pulse">Live</div>
+            </div>
+            <div style="padding:20px;">
+                <div class="glass-card" style="padding:20px; text-align:center;">
+                    <p style="color:var(--fg-muted);">Live matches will appear here.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SHOP PAGE -->
+        <div class="page" id="page-shop">
+            <div class="top-header"><h1 style="font-size:1rem;">Coin Shop</h1></div>
+            <div style="padding:20px;">
+                <div class="glass-card" style="padding:16px;margin-bottom:20px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent-gold),var(--accent-neon));display:flex;align-items:center;justify-content:center;">
+                            <span style="font-weight:900;color:var(--bg-primary);">$</span>
+                        </div>
+                        <div>
+                            <div style="font-size:0.75rem;color:var(--fg-muted);">Your Balance</div>
+                            <div style="font-family:'Orbitron';font-size:1.1rem;color:var(--accent-gold);" id="shopBalance">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="glass-card" style="padding:20px;text-align:center;">
+                        <div style="font-family:'Orbitron';font-size:1.5rem;color:var(--accent-gold);">500</div>
+                        <div style="font-size:0.7rem;color:var(--fg-muted);margin:4px 0 12px;">Coins</div>
+                        <div style="font-weight:bold;margin-bottom:8px;">$5</div>
+                        <button class="btn-primary" style="padding:10px;font-size:0.65rem;">Buy</button>
+                    </div>
+                    <div class="glass-card" style="padding:20px;text-align:center;">
+                        <div style="font-family:'Orbitron';font-size:1.5rem;color:var(--accent-gold);">1200</div>
+                        <div style="font-size:0.7rem;color:var(--accent-neon);margin:4px 0 12px;">+200 Bonus</div>
+                        <div style="font-weight:bold;margin-bottom:8px;">$10</div>
+                        <button class="btn-primary" style="padding:10px;font-size:0.65rem;">Buy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE PAGE -->
+        <div class="page" id="page-profile">
+            <div class="top-header"><h1 style="font-size:1rem;">My Profile</h1></div>
+            
+            <div class="profile-header">
+                <div class="avatar-container" onclick="openEditModal()">
+                    <div class="avatar">
+                        <img src="https://ui-avatars.com/api/?name=Gamer&background=0a0a0f&color=ffd700" id="profileAvatar">
+                    </div>
+                    <div class="edit-avatar-btn">
+                        <svg viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </div>
+                </div>
+                <h2 style="font-size:1.2rem;" id="profileName">Gamer</h2>
+                <div class="user-rank">Pro Player</div>
+                
+                <!-- User ID Section -->
+                <div class="user-id-box" onclick="copyUID()">
+                    <span>ID:</span>
+                    <code id="profileUID">Loading...</code>
+                    <svg style="width:14px;height:14px;stroke:var(--fg-muted);fill:none;" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                </div>
+            </div>
+
+            <div style="padding: 0 20px 20px;">
+                <div class="profile-stats">
+                    <div class="stat-item"><div class="stat-value" id="statWins">0</div><div class="stat-label">Wins</div></div>
+                    <div class="stat-item"><div class="stat-value" id="statMatches">0</div><div class="stat-label">Matches</div></div>
+                    <div class="stat-item"><div class="stat-value" id="statBalance">0</div><div class="stat-label">Coins</div></div>
+                </div>
+
+                <div class="referral-card">
+                    <h3 style="font-size:0.9rem;color:var(--fg);">Invite Friends & Earn</h3>
+                    <p style="font-size:0.75rem;color:var(--fg-muted);margin-bottom:10px;">Get 50 coins for every friend!</p>
+                    <div class="referral-code" id="referralCode">LOADING...</div>
+                    <button class="btn-primary" style="margin-top:10px;width:auto;padding:8px 20px;" onclick="copyReferral()">Copy Code</button>
+                </div>
+
+                <h3 style="font-size:0.9rem;margin:20px 0 10px;">Settings</h3>
+                <div class="glass-card" style="padding:0;">
+                    <div class="menu-item" onclick="openEditModal()">
+                        <div class="menu-left"><div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div><span>Edit Profile</span></div>
+                        <svg style="width:20px;height:20px;stroke:var(--fg-muted);fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-left"><div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div><span>Notifications</span></div>
+                        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                    </div>
+                    <div class="menu-item" onclick="openPwdModal()">
+                        <div class="menu-left"><div class="menu-icon"><svg viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div><span>Change Password</span></div>
+                        <svg style="width:20px;height:20px;stroke:var(--fg-muted);fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                    </div>
+                    <div class="menu-item" onclick="logoutUser()">
+                        <div class="menu-left"><div class="menu-icon" style="background:rgba(255,68,68,0.1);"><svg style="stroke:var(--danger);"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></div><span style="color:var(--danger);">Logout</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAV -->
+        <nav class="bottom-nav">
+            <div class="nav-item active" data-page="home"><svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Home</span></div>
+            <div class="nav-item" data-page="arena"><svg viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg><span>Arena</span></div>
+            <div class="nav-item" data-page="live"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg><span>Live</span></div>
+            <div class="nav-item" data-page="shop"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M8 10l4-4 4 4"/></svg><span>Shop</span></div>
+            <div class="nav-item" data-page="profile"><svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg><span>Profile</span></div>
+        </nav>
+    </div>
+
+    <!-- EDIT PROFILE MODAL -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <div class="modal-title">Edit Profile</div>
+            
+            <label style="font-size:0.8rem;color:var(--fg-muted);">Display Name</label>
+            <input type="text" id="editName" class="modal-input" placeholder="Enter new name">
+
+            <label style="font-size:0.8rem;color:var(--fg-muted);">Profile Image</label>
+            <div class="file-input-wrapper">
+                <div class="file-input-display" id="fileDisplay">
+                    <span>Click to select image</span>
+                    <img id="previewImg" class="preview-image" alt="Preview">
+                </div>
+                <input type="file" id="editImage" accept="image/*" onchange="previewFile(this)">
+            </div>
+
+            <div id="editMsg" style="font-size:0.8rem;text-align:center;margin:10px 0;height:16px;"></div>
+
+            <div class="modal-btn-group">
+                <button class="btn-primary btn-outline" onclick="closeEditModal()">Cancel</button>
+                <button class="btn-primary" id="editBtn" onclick="handleUpdateProfile()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div class="modal-overlay" id="pwdModal">
+        <div class="modal-content">
+            <div class="modal-title">Change Password</div>
+            <input type="password" id="pwdCurrent" class="modal-input" placeholder="Current Password">
+            <input type="password" id="pwdNew" class="modal-input" placeholder="New Password">
+            <div style="font-size:0.7rem;color:var(--fg-muted);margin-bottom:10px;">* Must be at least 6 characters</div>
+            <div id="pwdMsg" style="font-size:0.8rem;text-align:center;margin-bottom:10px;height:16px;"></div>
+            <div class="modal-btn-group">
+                <button class="btn-primary btn-outline" onclick="closePwdModal()">Cancel</button>
+                <button class="btn-primary" id="pwdBtn" onclick="handleChangePassword()">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION PANEL -->
+    <div class="notif-overlay" id="notifOverlay" onclick="toggleNotifPanel()"></div>
+    <div class="notif-panel" id="notifPanel">
+        <div style="padding:20px; border-bottom:1px solid var(--border);"><h3 style="font-family:'Orbitron'; font-size:1rem;">Notifications</h3></div>
+        <div id="notifList" style="overflow-y:auto; height:calc(100% - 60px);"><div class="empty-state">No notifications</div></div>
+    </div>
+
+    <!-- Logic -->
+    <script>
+        const c=document.getElementById('particles-canvas'),ctx=c.getContext('2d');let p=[];
+        function initP(){c.width=innerWidth;c.height=innerHeight;p=[];for(let i=0;i<50;i++)p.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.5,vx:(Math.random()-0.5)*0.4,vy:(Math.random()-0.5)*0.4,a:Math.random()*0.5+0.2})}
+        function drawP(){ctx.clearRect(0,0,c.width,c.height);p.forEach(e=>{e.x+=e.vx;e.y+=e.vy;if(e.x<0)e.x=c.width;if(e.x>c.width)e.x=0;if(e.y<0)e.y=c.height;if(e.y>c.height)e.y=0;ctx.beginPath();ctx.arc(e.x,e.y,Math.max(1,e.r*2),0,Math.PI*2);ctx.fillStyle=`rgba(255,215,0,${e.a})`;ctx.fill()});requestAnimationFrame(drawP)}
+        window.addEventListener('resize',initP);initP();drawP();
+        
+        const navItems = document.querySelectorAll('.nav-item');
+        const pages = document.querySelectorAll('.page');
+        function navigateTo(id) { navItems.forEach(n => n.classList.toggle('active', n.dataset.page === id)); pages.forEach(p => p.classList.toggle('active', p.id === `page-${id}`)); if(document.getElementById('notifPanel').classList.contains('open')) toggleNotifPanel(); }
+        navItems.forEach(n => n.addEventListener('click', () => navigateTo(n.dataset.page)));
+        
+        function toggleNotifPanel() { document.getElementById('notifPanel').classList.toggle('open'); document.getElementById('notifOverlay').classList.toggle('show'); }
+        function copyReferral() { navigator.clipboard.writeText(document.getElementById('referralCode').textContent); alert("Referral code copied!"); }
+        function copyUID() { navigator.clipboard.writeText(document.getElementById('profileUID').textContent); alert("User ID copied!"); }
+
+        // Modals
+        window.openPwdModal = () => { document.getElementById('pwdModal').classList.add('active'); document.getElementById('pwdMsg').textContent = ""; document.getElementById('pwdCurrent').value = ""; document.getElementById('pwdNew').value = ""; };
+        window.closePwdModal = () => { document.getElementById('pwdModal').classList.remove('active'); };
+        
+        window.openEditModal = () => { 
+            document.getElementById('editModal').classList.add('active'); 
+            document.getElementById('editMsg').textContent = ""; 
+            document.getElementById('editName').value = document.getElementById('profileName').textContent;
+            document.getElementById('previewImg').style.display = 'none';
+            document.getElementById('fileDisplay').querySelector('span').textContent = "Click to select image";
+        };
+        window.closeEditModal = () => { document.getElementById('editModal').classList.remove('active'); };
+
+        // Image Preview
+        window.previewFile = (input) => {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.getElementById('previewImg');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    document.getElementById('fileDisplay').querySelector('span').textContent = input.files[0].name;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+    </script>
+
+    <!-- APP LOGIC -->
+    <script type="module">
+        import { auth, db } from "../js/firebase.js";
+        import { onAuthChange, signOutUser } from "../js/auth.js";
+        import { collection, query, onSnapshot, doc, updateDoc, increment, arrayUnion, orderBy } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+        import { reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+
+        const IMGBB_API_KEY = "e40ca77f38c298d7f8d5c1dde3893f91";
+        let currentUser = null;
+        let userBalance = 0;
+
+        function updateUI(data) {
+            const name = data.displayName || 'Gamer';
+            const bal = data.balance || 0;
+            const avatar = data.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0a0a0f&color=ffd700`;
+            
+            document.getElementById('homeUserName').textContent = name;
+            document.getElementById('profileName').textContent = name;
+            document.getElementById('profileAvatar').src = avatar;
+            document.getElementById('homeBalance').textContent = bal + " Coins";
+            document.getElementById('shopBalance').textContent = bal;
+            document.getElementById('statBalance').textContent = bal;
+            
+            if(currentUser) {
+                document.getElementById('profileUID').textContent = currentUser.uid;
+                document.getElementById('referralCode').textContent = (currentUser.uid).substring(0, 8).toUpperCase();
+            }
+        }
+
+        function subscribeToNotifications(uid) {
+            const notifRef = collection(db, "users", uid, "notifications");
+            const q = query(notifRef, orderBy("timestamp", "desc"));
+            onSnapshot(q, (snapshot) => {
+                const badge = document.getElementById('notifBadge');
+                const list = document.getElementById('notifList');
+                let unreadCount = 0; let html = '';
+                if (snapshot.empty) { list.innerHTML = '<div class="empty-state">No notifications</div>'; badge.classList.remove('show'); return; }
+                snapshot.forEach(d => { const n = d.data(); if(!n.read) unreadCount++; html += `<div class="notif-item ${!n.read ? 'unread' : ''}"><div style="font-weight:600;margin-bottom:4px;">${n.title}</div><div style="font-size:0.8rem;color:var(--fg-muted);">${n.message}</div></div>`; });
+                list.innerHTML = html;
+                if (unreadCount > 0) { badge.textContent = unreadCount; badge.classList.add('show'); } else badge.classList.remove('show');
+            });
+        }
+
+        function subscribeToTournaments() {
+            const q = query(collection(db, "tournaments"));
+            onSnapshot(q, (snapshot) => {
+                let homeHtml = ''; let arenaHtml = '';
+                if (snapshot.empty) { homeHtml = '<div class="empty-state">No tournaments</div>'; } 
+                else {
+                    snapshot.forEach(d => {
+                        const t = { id: d.id, ...d.data() };
+                        const isJoined = t.participants && currentUser ? t.participants.includes(currentUser.uid) : false;
+                        const isFull = t.currentPlayers >= t.maxPlayers;
+                        let statusClass = t.status === 'live' ? 'status-live' : 'status-upcoming';
+                        let btnText = "Join Now"; let btnDisabled = false; let btnAction = `onclick="joinTournament('${t.id}', ${t.entryFee})"`;
+                        if (isJoined) { btnText = "Joined"; btnDisabled = true; btnAction = ""; }
+                        else if (isFull) { btnText = "Full"; btnDisabled = true; btnAction = ""; }
+                        const card = `<div class="glass-card tournament-card"><div class="tournament-banner"><img src="${t.banner || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&q=80'}"><div class="prize-badge"><span style="font-size:0.6rem;color:var(--fg-muted)">Prize</span><div style="font-family:'Orbitron';font-size:0.9rem;color:var(--accent-gold);">${t.prizePool || 0}</div></div></div><div style="padding:12px;"><span class="tag ${statusClass}">${t.status || 'upcoming'}</span><h3 style="font-size:0.9rem;margin:8px 0;">${t.name}</h3><div style="display:flex;justify-content:space-between;font-size:0.75rem;margin-bottom:8px;"><span>Entry: <span style="color:var(--accent-gold)">${t.entryFee}</span></span><span>${t.currentPlayers || 0}/${t.maxPlayers || '∞'}</span></div><button class="btn-primary" style="padding:10px;font-size:0.7rem;" ${btnAction} ${btnDisabled ? 'disabled style="opacity:0.5;"' : ''}>${btnText}</button></div></div>`;
+                        homeHtml += card; arenaHtml += card;
+                    });
+                }
+                document.getElementById('homeTournaments').innerHTML = homeHtml;
+                document.getElementById('arenaTournaments').innerHTML = arenaHtml;
+            });
+        }
+
+        window.joinTournament = async (id, fee) => {
+            if (!currentUser) return;
+            if (userBalance < fee) return alert("Insufficient coins!");
+            try {
+                await updateDoc(doc(db, "users", currentUser.uid), { balance: increment(-fee) });
+                await updateDoc(doc(db, "tournaments", id), { currentPlayers: increment(1), participants: arrayUnion(currentUser.uid) });
+                alert("Joined successfully!");
+            } catch (e) { alert("Error: " + e.message); }
+        };
+
+        // --- UPDATE PROFILE LOGIC ---
+        window.handleUpdateProfile = async () => {
+            const newName = document.getElementById('editName').value;
+            const fileInput = document.getElementById('editImage');
+            const msgEl = document.getElementById('editMsg');
+            const btn = document.getElementById('editBtn');
+
+            if(!newName) { msgEl.style.color = "var(--danger)"; msgEl.textContent = "Name cannot be empty."; return; }
+
+            btn.disabled = true; btn.textContent = "Saving..."; msgEl.textContent = "";
+
+            try {
+                let photoURL = null;
+
+                // 1. Upload Image if selected
+                if (fileInput.files && fileInput.files[0]) {
+                    msgEl.textContent = "Uploading image...";
+                    const formData = new FormData();
+                    formData.append('image', fileInput.files[0]);
+                    
+                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        photoURL = data.data.url;
+                    } else {
+                        throw new Error("Image upload failed");
+                    }
+                }
+
+                // 2. Update Firestore
+                msgEl.textContent = "Updating profile...";
+                const userRef = doc(db, "users", currentUser.uid);
+                const updateData = { displayName: newName };
+                if (photoURL) updateData.photoURL = photoURL;
+
+                await updateDoc(userRef, updateData);
+
+                msgEl.style.color = "var(--accent-neon)";
+                msgEl.textContent = "Profile Updated!";
+                
+                setTimeout(() => {
+                    closeEditModal();
+                    btn.disabled = false;
+                    btn.textContent = "Save";
+                }, 1000);
+
+            } catch (error) {
+                console.error(error);
+                msgEl.style.color = "var(--danger)";
+                msgEl.textContent = "Error: " + error.message;
+                btn.disabled = false;
+                btn.textContent = "Save";
+            }
+        };
+
+        // Change Password Logic
+        window.handleChangePassword = async () => {
+            const currentPwd = document.getElementById('pwdCurrent').value;
+            const newPwd = document.getElementById('pwdNew').value;
+            const msgEl = document.getElementById('pwdMsg');
+            const btn = document.getElementById('pwdBtn');
+
+            if(!currentPwd || !newPwd) { msgEl.style.color = "var(--danger)"; msgEl.textContent = "Fadlan buuxi meelaha banaan."; return; }
+            if(newPwd.length < 6) { msgEl.style.color = "var(--danger)"; msgEl.textContent = "Password-ka cusub waa inuu ka yara yahay 6 xaraf."; return; }
+
+            btn.disabled = true; btn.textContent = "Updating..."; msgEl.textContent = "";
+
+            try {
+                const user = auth.currentUser;
+                const credential = EmailAuthProvider.credential(user.email, currentPwd);
+                await reauthenticateWithCredential(user, credential);
+                await updatePassword(user, newPwd);
+                msgEl.style.color = "var(--accent-neon)"; msgEl.textContent = "Password-ka waa la beddelay!";
+                setTimeout(() => { closePwdModal(); btn.disabled = false; btn.textContent = "Update"; }, 1500);
+            } catch (error) {
+                msgEl.style.color = "var(--danger)";
+                btn.disabled = false; btn.textContent = "Update";
+                if(error.code === 'auth/invalid-credential') msgEl.textContent = "Password-ka hore waa qalad.";
+                else msgEl.textContent = "Khalad: " + error.message;
+            }
+        };
+
+        window.logoutUser = async () => { await signOutUser(); window.location.href = '../index.html'; };
+
+        onAuthChange(async (user) => {
+            if (user) {
+                currentUser = user;
+                onSnapshot(doc(db, "users", user.uid), (doc) => { if (doc.exists()) { userBalance = doc.data().balance || 0; updateUI(doc.data()); } });
+                subscribeToTournaments();
+                subscribeToNotifications(user.uid);
+            } else { window.location.href = '../index.html'; }
+        });
+    </script>
+</body>
+</html>
