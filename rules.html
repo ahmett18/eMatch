@@ -1,0 +1,1196 @@
+
+<!DOCTYPE html>
+<html lang="so" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="description" content="eMatch — Rules & Terms">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>eMatch — Xeerarka</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <style>
+
+    /* ── Hero ───────────────────────────────────────────── */
+    .rules-hero {
+      background: linear-gradient(135deg, #0d1117 0%, #1a0a2e 50%, #0d2137 100%);
+      padding: var(--sp-xl) var(--sp-md) var(--sp-lg);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .rules-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(0,230,118,.12) 0%, transparent 55%),
+        radial-gradient(circle at 80% 30%, rgba(59,130,246,.10) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .rules-hero-icon {
+      font-size: 52px;
+      margin-bottom: var(--sp-sm);
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+    .rules-hero h1 {
+      font-size: 24px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      position: relative; z-index: 1;
+      margin-bottom: 6px;
+    }
+    .rules-hero p {
+      font-size: 13px;
+      color: var(--text-muted);
+      position: relative; z-index: 1;
+      margin: 0;
+    }
+
+    /* ── Progress bar (user accepted) ──────────────────── */
+    .accept-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--glass-border);
+      padding: var(--sp-sm) var(--sp-md);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-sm);
+      position: sticky;
+      top: 56px;
+      z-index: 80;
+    }
+    .accept-bar-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .accept-bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-card2);
+      border-radius: var(--r-full);
+      overflow: hidden;
+    }
+    .accept-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-green), var(--accent-blue));
+      border-radius: var(--r-full);
+      transition: width 400ms var(--ease);
+      width: 0%;
+    }
+    .accept-bar-pct {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-green);
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* ── Section ────────────────────────────────────────── */
+    .rules-section {
+      margin: var(--sp-md) var(--sp-md) 0;
+    }
+    .rules-section-header {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-sm);
+      margin-bottom: var(--sp-sm);
+      padding-bottom: var(--sp-sm);
+      border-bottom: 2px solid var(--glass-border);
+    }
+    .rules-section-icon {
+      width: 36px; height: 36px;
+      border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .rules-section-header h2 {
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .rules-section-header .rule-count {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-full);
+      padding: 2px 8px;
+      color: var(--text-muted);
+    }
+
+    /* ── Rule Card ──────────────────────────────────────── */
+    .rule-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--r-md);
+      margin-bottom: var(--sp-sm);
+      overflow: hidden;
+      transition: border-color var(--dur-fast) var(--ease);
+    }
+    .rule-card.accepted {
+      border-color: rgba(0,230,118,.35);
+    }
+    .rule-card-header {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-sm);
+      padding: var(--sp-md);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .rule-number {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--bg-card2);
+      border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      transition: all var(--dur-fast) var(--ease);
+    }
+    .rule-card.accepted .rule-number {
+      background: rgba(0,230,118,.15);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+    }
+    .rule-card-title {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .rule-chevron {
+      color: var(--text-muted);
+      width: 18px; height: 18px;
+      transition: transform var(--dur-fast) var(--ease);
+      flex-shrink: 0;
+    }
+    .rule-card.open .rule-chevron {
+      transform: rotate(180deg);
+    }
+    .rule-card-body {
+      display: none;
+      padding: 0 var(--sp-md) var(--sp-md);
+      border-top: 1px solid var(--glass-border);
+    }
+    .rule-card.open .rule-card-body {
+      display: block;
+    }
+    .rule-card-body p {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin: var(--sp-sm) 0 0;
+    }
+    .rule-card-body ul {
+      margin: var(--sp-sm) 0 0 var(--sp-md);
+      padding: 0;
+    }
+    .rule-card-body ul li {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 4px;
+    }
+    .rule-card-body ul li::marker {
+      color: var(--accent-green);
+    }
+    .rule-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--r-full);
+      margin-top: var(--sp-sm);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+    .tag-required  { background: rgba(239,68,68,.12);  color: var(--accent-red);   border: 1px solid rgba(239,68,68,.25);  }
+    .tag-important { background: rgba(255,215,0,.12);  color: var(--accent-gold);  border: 1px solid rgba(255,215,0,.25);  }
+    .tag-info      { background: rgba(59,130,246,.12); color: var(--accent-blue);  border: 1px solid rgba(59,130,246,.25); }
+    .tag-green     { background: rgba(0,230,118,.12);  color: var(--accent-green); border: 1px solid rgba(0,230,118,.25);  }
+
+    /* Accept checkbox row */
+    .rule-accept-row {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-sm);
+      margin-top: var(--sp-sm);
+      padding-top: var(--sp-sm);
+      border-top: 1px solid var(--glass-border);
+      cursor: pointer;
+    }
+    .rule-checkbox {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      background: var(--bg-card2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all var(--dur-fast) var(--ease);
+    }
+    .rule-checkbox.checked {
+      background: var(--accent-green);
+      border-color: var(--accent-green);
+    }
+    .rule-checkbox svg {
+      display: none;
+      width: 14px; height: 14px;
+    }
+    .rule-checkbox.checked svg { display: block; }
+    .rule-accept-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .rule-accept-label strong {
+      color: var(--text-primary);
+    }
+
+    /* ── All-Accept CTA ─────────────────────────────────── */
+    .accept-all-section {
+      margin: var(--sp-lg) var(--sp-md);
+      background: linear-gradient(135deg, rgba(0,230,118,.08), rgba(59,130,246,.08));
+      border: 1px solid rgba(0,230,118,.2);
+      border-radius: var(--r-lg);
+      padding: var(--sp-lg);
+      text-align: center;
+    }
+    .accept-all-section h3 {
+      margin-bottom: var(--sp-sm);
+    }
+    .accept-all-section p {
+      font-size: 13px;
+      margin-bottom: var(--sp-md);
+    }
+    .accepted-stamp {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--sp-sm);
+    }
+    .accepted-stamp.visible {
+      display: flex;
+    }
+    .stamp-icon {
+      font-size: 48px;
+      animation: pop .4s var(--ease);
+    }
+    @keyframes pop {
+      0%  { transform: scale(0); }
+      70% { transform: scale(1.2); }
+      100%{ transform: scale(1); }
+    }
+    .stamp-text {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--accent-green);
+    }
+    .stamp-date {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ── Highlight box ──────────────────────────────────── */
+    .highlight-box {
+      background: rgba(255,215,0,.06);
+      border: 1px solid rgba(255,215,0,.2);
+      border-radius: var(--r-sm);
+      padding: var(--sp-sm) var(--sp-md);
+      margin-top: var(--sp-sm);
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .highlight-box.green {
+      background: rgba(0,230,118,.06);
+      border-color: rgba(0,230,118,.2);
+    }
+    .highlight-box.red {
+      background: rgba(239,68,68,.06);
+      border-color: rgba(239,68,68,.2);
+    }
+
+    /* ── Back button ────────────────────────────────────── */
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      font-family: inherit;
+    }
+    .back-btn:active { opacity: .7; }
+
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Offline Banner -->
+  <div id="offline-banner" class="offline-banner hidden" role="alert" aria-live="assertive">
+    📵 Internetka kuma xidna
+  </div>
+
+  <!-- ── Top Header ─────────────────────────────────────── -->
+  <header class="top-header">
+    <button class="back-btn" onclick="history.back()" aria-label="Dib u noqo">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      Dib
+    </button>
+    <div style="font-size:16px;font-weight:800">📋 Xeerarka</div>
+    <div class="coin-chip"
+      onclick="window.location.href='wallet.html'"
+      role="button" tabindex="0" aria-label="Wallet">
+      🪙 <span class="coin-balance-display">—</span>
+    </div>
+  </header>
+
+  <!-- ── Progress Bar ───────────────────────────────────── -->
+  <div class="accept-bar">
+    <span class="accept-bar-label">Aqbalaad</span>
+    <div class="accept-bar-track">
+      <div class="accept-bar-fill" id="progress-fill"></div>
+    </div>
+    <span class="accept-bar-pct" id="progress-pct">0%</span>
+  </div>
+
+  <!-- ── Main ───────────────────────────────────────────── -->
+  <main class="page-content" role="main">
+
+    <!-- Hero -->
+    <div class="rules-hero">
+      <span class="rules-hero-icon">📜</span>
+      <h1>Xeerarka & Shuruudaha</h1>
+      <p>Fadlan xeerarka oo dhan si taxadar leh u akhri oo aqbali</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECTION 1: XISAABTA                              -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="rules-section">
+      <div class="rules-section-header">
+        <div class="rules-section-icon" style="background:rgba(59,130,246,.15)">👤</div>
+        <h2 style="color:var(--accent-blue)">Xisaabta Isticmaalaha</h2>
+        <span class="rule-count">4 xeer</span>
+      </div>
+
+      <!-- Rule 1 -->
+      <div class="rule-card" id="rule-1" data-rule="1">
+        <div class="rule-card-header" onclick="toggleRule('rule-1')">
+          <div class="rule-number">1</div>
+          <div class="rule-card-title">Hal xisaab qof kasta</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Isticmaalaha kasta waxaa u ogol hal xisaab oo keliya eMatch ku. Labo xisaab ama ka badan
+          sameynayntu waa xad-gudub ahna xisaabahaaga oo dhan ayaa la xiri karaa.</p>
+          <div class="highlight-box red">
+            ⛔ Labo xisaab haysashadu waxay keeni kartaa
+            ban permanent ah oo lacag la'aan ah.
+          </div>
+          <span class="rule-tag tag-required">⚠️ Muhiim</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-1')">
+            <div class="rule-checkbox" id="chk-rule-1">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — hal xisaab oo keliya ayaan samaysan doonaa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 2 -->
+      <div class="rule-card" id="rule-2" data-rule="2">
+        <div class="rule-card-header" onclick="toggleRule('rule-2')">
+          <div class="rule-number">2</div>
+          <div class="rule-card-title">Macluumaadka saxda ah</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Magacaaga, email-kaaga, iyo lambarkaaga telefon-ka ee saxda ah ayaad ku qori doontaa.
+          Macluumaad been ah bixintu taa go'aamin kartaa bannaanka xisaabta.</p>
+          <ul>
+            <li>Magaca asal ah oo geli</li>
+            <li>Email shaqaynaya oo isticmaal</li>
+            <li>Lambarka telefon-ka ee +252 ah</li>
+          </ul>
+          <span class="rule-tag tag-required">⚠️ Muhiim</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-2')">
+            <div class="rule-checkbox" id="chk-rule-2">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — macluumaad sax ah ayaan bixin doonaa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 3 -->
+      <div class="rule-card" id="rule-3" data-rule="3">
+        <div class="rule-card-header" onclick="toggleRule('rule-3')">
+          <div class="rule-number">3</div>
+          <div class="rule-card-title">Password-ka amnigeynta</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Xisaabta amnigeynta waa mas'uuliyadaada. Password-kaaga qof kale ha u sheeginin.
+          Haddii xisaabta la xado, eMatch mas'uul kama aha lacagta lunsatay.</p>
+          <div class="highlight-box">
+            🔑 Password awood leh isticmaal: xaraf weyn, yar, lambar, iyo sumad
+            ugu yaraan 8 xaraf.
+          </div>
+          <span class="rule-tag tag-important">🔑 Amniga</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-3')">
+            <div class="rule-checkbox" id="chk-rule-3">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — password-kayga ayaan ilaalin doonaa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 4 -->
+      <div class="rule-card" id="rule-4" data-rule="4">
+        <div class="rule-card-header" onclick="toggleRule('rule-4')">
+          <div class="rule-number">4</div>
+          <div class="rule-card-title">Da'da ugu yar</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>eMatch waxaa isticmaali karaan dadka 18 sano oo dhaafay oo kaliya.
+          Haddaadan gaadhinin 18 sano, fadlan platform-kan ha isticmaalin.</p>
+          <div class="highlight-box red">
+            ⛔ 18 sano ka yar: xisaabta la xiri doonaa markii la ogaado.
+          </div>
+          <span class="rule-tag tag-required">🔞 18+</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-4')">
+            <div class="rule-checkbox" id="chk-rule-4">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Waxaan xaqiijinayaa</strong> in aan 18 sano ama ka weyn ahay
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECTION 2: CIYAARTA                              -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="rules-section" style="margin-top:var(--sp-lg)">
+      <div class="rules-section-header">
+        <div class="rules-section-icon" style="background:rgba(0,230,118,.15)">🎮</div>
+        <h2 style="color:var(--accent-green)">Xeerarka Ciyaarta</h2>
+        <span class="rule-count">5 xeer</span>
+      </div>
+
+      <!-- Rule 5 -->
+      <div class="rule-card" id="rule-5" data-rule="5">
+        <div class="rule-card-header" onclick="toggleRule('rule-5')">
+          <div class="rule-number">5</div>
+          <div class="rule-card-title">Heshiiska match-ka</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Marka aad match ku biirtid, labada ciyaartood waxay aqbalaan inay ciyaaraan si xalaal ah.
+          Match-ka ka bixin ka hor inta aanu dhammaanin waa xad-gudub.</p>
+          <ul>
+            <li>Match bilowday ka bixin karo maysid</li>
+            <li>Internet connection fiican hubi ka hor ciyaarta</li>
+            <li>Dhibaato technical hadduu dhaco, admin-ka la xiriir</li>
+          </ul>
+          <span class="rule-tag tag-required">🎮 Ciyaar</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-5')">
+            <div class="rule-checkbox" id="chk-rule-5">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — match bilowday dhamaystiri doonaa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 6 -->
+      <div class="rule-card" id="rule-6" data-rule="6">
+        <div class="rule-card-header" onclick="toggleRule('rule-6')">
+          <div class="rule-number">6</div>
+          <div class="rule-card-title">Khiyaaanta & cheating</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Khiyaannada si kasta oo u tahay way mamnuuc tahay. Tani waxay ku jirtaa:</p>
+          <ul>
+            <li>Hack ama software ka kale isticmaalka</li>
+            <li>Xisaab been ah isticmaalka (smurfing)</li>
+            <li>Natiijooyinka been ah sheegankaaga</li>
+            <li>Ciyaartoodaagaaga la qabsanaanshaha (match fixing)</li>
+          </ul>
+          <div class="highlight-box red">
+            ⛔ Khiyaannada la xaqiijiyey: Ban joogto ah + lacag dib looguma celin doono.
+          </div>
+          <span class="rule-tag tag-required">⚠️ Adag</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-6')">
+            <div class="rule-checkbox" id="chk-rule-6">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — khiyaan weligay samayn mayo
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 7 -->
+      <div class="rule-card" id="rule-7" data-rule="7">
+        <div class="rule-card-header" onclick="toggleRule('rule-7')">
+          <div class="rule-number">7</div>
+          <div class="rule-card-title">Natiijada xaqiijinta</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Match-ka dhammaadka ka dib, admin-ka ayaa natiijooyinka xaqiijiya.
+          Laba ciyaartood labadaba waa in ay screenshot-ka ama video-ga u soo diraan.</p>
+          <div class="highlight-box green">
+            ✅ Natiijooyinka xaqiijinta: Screenshot keli ah kuma filna —
+            video ama labo screenshot oo is-waafaqsan.
+          </div>
+          <span class="rule-tag tag-important">📸 Proof</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-7')">
+            <div class="rule-checkbox" id="chk-rule-7">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — proof u soo diri doonaa admin-ka
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 8 -->
+      <div class="rule-card" id="rule-8" data-rule="8">
+        <div class="rule-card-header" onclick="toggleRule('rule-8')">
+          <div class="rule-number">8</div>
+          <div class="rule-card-title">Daacadnimada ciyaarta</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Ciyaarta si xalaal ah u ciyaar. Guusha iyo khasaartu labaduba waa qayb
+          ka mid ah ciyaarta. Guusha been ah xoog ku soo qaadashadu waa xad-gudub.</p>
+          <ul>
+            <li>Lagma cadaadinayo in aad xunto</li>
+            <li>Xiddigaha iyo ranking-ka si daacad ah u helo</li>
+            <li>Ciyaartoodaagaaga xushmad u hayo</li>
+          </ul>
+          <span class="rule-tag tag-green">🤝 Fair Play</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-8')">
+            <div class="rule-checkbox" id="chk-rule-8">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — si daacad ah ayaan u ciyaari doonaa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 9 -->
+      <div class="rule-card" id="rule-9" data-rule="9">
+        <div class="rule-card-header" onclick="toggleRule('rule-9')">
+          <div class="rule-number">9</div>
+          <div class="rule-card-title">Wakhtiga match-ka</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Match abuuray ka dib, ciyaartoodaha kale waa inuu ku biiraa 30 daqiiqo gudahood.
+          Haddaan la biirin, match-ka waa la joojiyo lacagtana dib ayaa loo celin doonaa.</p>
+          <div class="highlight-box">
+            ⏰ 30 daqiiqo: Ciyaartoodaha 2-aad haddaan timid, stake-ka dib ayaa
+            loogu celiyaa abuuraha.
+          </div>
+          <span class="rule-tag tag-info">⏱️ Wakhti</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-9')">
+            <div class="rule-checkbox" id="chk-rule-9">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — wakhtiga waan xurmayn doonaa
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECTION 3: LACAGTA                               -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="rules-section" style="margin-top:var(--sp-lg)">
+      <div class="rules-section-header">
+        <div class="rules-section-icon" style="background:rgba(255,215,0,.15)">💰</div>
+        <h2 style="color:var(--accent-gold)">Lacagta & Wallet-ka</h2>
+        <span class="rule-count">4 xeer</span>
+      </div>
+
+      <!-- Rule 10 -->
+      <div class="rule-card" id="rule-10" data-rule="10">
+        <div class="rule-card-header" onclick="toggleRule('rule-10')">
+          <div class="rule-number">10</div>
+          <div class="rule-card-title">Deposit-ka xaqiijinta</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Lacagta la soo dirayo waa in aad USSD code-ka dhuftid kadibna confirmation-ka
+          (SMS) screenshot-ka admin-ka u soo dirto.</p>
+          <ul>
+            <li>Hormuud EVC Plus: <code style="color:var(--accent-green)">*712*...</code></li>
+            <li>Somnet: <code style="color:var(--accent-green)">*888*1*...</code></li>
+            <li>Somtel: <code style="color:var(--accent-green)">*668*...</code></li>
+          </ul>
+          <div class="highlight-box">
+            ⏳ Ogolashada: 5–30 daqiiqo gudahood coins-kaagu waa la kordhin doonaa.
+          </div>
+          <span class="rule-tag tag-important">💳 Deposit</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-10')">
+            <div class="rule-checkbox" id="chk-rule-10">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — deposit sax ah ayaan sameyn doonaa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 11 -->
+      <div class="rule-card" id="rule-11" data-rule="11">
+        <div class="rule-card-header" onclick="toggleRule('rule-11')">
+          <div class="rule-number">11</div>
+          <div class="rule-card-title">Lacag dib u celintu</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Lacag match-ka ku bixisay haddaad xuntid dib looguma celinayso.
+          Kaliya refund-ka loo isticmaali karaa haddii:</p>
+          <ul>
+            <li>Match-ka ciyaartoodaha kale uusan biirin (30 daqiiqo ka dib)</li>
+            <li>System error uu dhacay oo admin-ku xaqiijiyey</li>
+            <li>Match-ka admin-ku joojiyey sabab rasmi ah darteed</li>
+          </ul>
+          <div class="highlight-box red">
+            ⛔ Khasaaraha ciyaarta: Dib looguma celin karo — si xalaal ah baa loo khasaartay.
+          </div>
+          <span class="rule-tag tag-required">💸 Refund</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-11')">
+            <div class="rule-checkbox" id="chk-rule-11">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — khasaaraha ciyaarta waan aqbalay
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 12 -->
+      <div class="rule-card" id="rule-12" data-rule="12">
+        <div class="rule-card-header" onclick="toggleRule('rule-12')">
+          <div class="rule-number">12</div>
+          <div class="rule-card-title">Lacag dirida xeerarka</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Marka aad coins qof kale u dirto, transaction-kan ma dib loo celin karo.
+          UID-ka qofka aad u diraysid si adag u hubi ka hor aad u dirto.</p>
+          <div class="highlight-box red">
+            ⛔ UID khalad: Haddaad UID khalad ah u dirto lacagta, dib looguma celin
+            karo — adiga oo keliya baa mas'uul ah.
+          </div>
+          <span class="rule-tag tag-required">📤 Send</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-12')">
+            <div class="rule-checkbox" id="chk-rule-12">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — UID-ka si fiican u hubsan doonaa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 13 -->
+      <div class="rule-card" id="rule-13" data-rule="13">
+        <div class="rule-card-header" onclick="toggleRule('rule-13')">
+          <div class="rule-number">13</div>
+          <div class="rule-card-title">Qiimaha coins-ka</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Qiimaha coin-ka waxuu ku xidnaa siyaasadda eMatch. Qiimaha waa la bedeli karaa
+          hore ogeysiis la'aantii. Coins-ka platform-ka ka baxsan qiime ma lahan.</p>
+          <div class="highlight-box">
+            💱 Hadda: $1 = 10 coins &nbsp;|&nbsp; Min deposit: $1 &nbsp;|&nbsp; Max: $1,000
+          </div>
+          <span class="rule-tag tag-info">💱 Qiime</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-13')">
+            <div class="rule-checkbox" id="chk-rule-13">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — qiimaha coins-ka waan fahmay
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECTION 4: DHAQANKA                              -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="rules-section" style="margin-top:var(--sp-lg)">
+      <div class="rules-section-header">
+        <div class="rules-section-icon" style="background:rgba(239,68,68,.15)">🤝</div>
+        <h2 style="color:var(--accent-red)">Dhaqanka & Xushmadda</h2>
+        <span class="rule-count">3 xeer</span>
+      </div>
+
+      <!-- Rule 14 -->
+      <div class="rule-card" id="rule-14" data-rule="14">
+        <div class="rule-card-header" onclick="toggleRule('rule-14')">
+          <div class="rule-number">14</div>
+          <div class="rule-card-title">Xushmadda isticmaalayaasha kale</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Isticmaalayaasha kale xushmad u hayo. Hadal xun, cabsi gelinta, ama
+          hanjabaddu waa mamnuuc.</p>
+          <ul>
+            <li>Eray xun isticmaalka mamnuuc</li>
+            <li>Discrimination wax kasta oo ku saleysan mamnuuc</li>
+            <li>Spam ama harassment mamnuuc</li>
+          </ul>
+          <span class="rule-tag tag-required">🤝 Xushmad</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-14')">
+            <div class="rule-checkbox" id="chk-rule-14">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — dadka kale waan xurmayn doonaa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 15 -->
+      <div class="rule-card" id="rule-15" data-rule="15">
+        <div class="rule-card-header" onclick="toggleRule('rule-15')">
+          <div class="rule-number">15</div>
+          <div class="rule-card-title">Go'aanka admin-ka</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>Admin-ka go'aankiisu waa mid kama dambeys ah. Khilaafka hadduu dhaco,
+          admin-ka ayaa xukuma natiijooyinka. Go'aankooda dood lagu murugsan karo
+          laakiin la xurmayn lazim.</p>
+          <div class="highlight-box">
+            ⚖️ Admin-ka go'aankooda: 24 saac gudahood ayaad ka codsan kartaa
+            dib-u-eegis — ka dib go'aanku waa kama dambeys ah.
+          </div>
+          <span class="rule-tag tag-important">⚖️ Admin</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-15')">
+            <div class="rule-checkbox" id="chk-rule-15">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — go'aanka admin-ka waan aqbalay
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 16 -->
+      <div class="rule-card" id="rule-16" data-rule="16">
+        <div class="rule-card-header" onclick="toggleRule('rule-16')">
+          <div class="rule-number">16</div>
+          <div class="rule-card-title">Xeerarka beddelka</div>
+          <svg class="rule-chevron" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="rule-card-body">
+          <p>eMatch waxay xeerkaan beddeli kartaa mar kasta oo lagama maarmaanka ah.
+          Isbedelada waxaa ku ogeysiinaya app-ka gudihiisa. Isticmaalka sii wadiddu
+          waxay la mid tahay aqbalidda xeerkaan cusub.</p>
+          <span class="rule-tag tag-info">📋 Xeer</span>
+          <div class="rule-accept-row" onclick="toggleAccept('rule-16')">
+            <div class="rule-checkbox" id="chk-rule-16">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="none" stroke="#000" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <span class="rule-accept-label">
+              <strong>Xeerkaan waan aqbalay</strong> — xeerarka cusub ogaan doonaa
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- ACCEPT ALL CTA                                   -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <div class="accept-all-section" id="accept-all-section">
+
+      <!-- Not yet accepted -->
+      <div id="not-accepted-ui">
+        <div style="font-size:40px;margin-bottom:var(--sp-sm)">📋</div>
+        <h3>Xeerarka oo Dhan Aqbali</h3>
+        <p id="remaining-count" style="color:var(--text-muted)">
+          16 xeer ayaa hadhay
+        </p>
+        <button class="btn btn-primary" id="btn_accept_all"
+          onclick="acceptAll()"
+          style="max-width:280px;margin:0 auto">
+          <span class="btn-text">✅ Dhammaan Aqbali</span>
+          <div class="btn-spinner"></div>
+        </button>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:var(--sp-sm);margin-bottom:0">
+          Ama xeerka kasta gaar ahaan fur oo aqbali
+        </p>
+      </div>
+
+      <!-- Accepted stamp -->
+      <div class="accepted-stamp" id="accepted-stamp">
+        <div class="stamp-icon">✅</div>
+        <div class="stamp-text">Xeerarka oo Dhan Aqbalay!</div>
+        <div class="stamp-date" id="stamp-date">—</div>
+        <button class="btn btn-ghost mt-md"
+          onclick="history.back()"
+          style="max-width:200px;margin:var(--sp-md) auto 0">
+          ← Dib u noqo
+        </button>
+      </div>
+
+    </div>
+
+    <div style="height:var(--sp-xl)"></div>
+
+  </main>
+
+  <!-- ── Bottom Navigation ──────────────────────────────── -->
+  <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+    <a class="nav-item" data-page="dashboard.html" href="dashboard.html" aria-label="Home">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Home</span>
+      <span class="nav-tooltip" aria-hidden="true">Home</span>
+    </a>
+    <a class="nav-item" data-page="matches.html" href="matches.html" aria-label="Matches">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      <span>Matchs</span>
+      <span class="nav-tooltip" aria-hidden="true">Matches</span>
+    </a>
+    <a class="nav-item create-btn" href="dashboard.html"
+      onclick="localStorage.setItem('open_create','1')" aria-label="Match abuur">
+      <div class="nav-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5"  y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>
+      <span style="color:var(--text-muted)">Abuur</span>
+      <span class="nav-tooltip" aria-hidden="true">Match Abuur</span>
+    </a>
+    <a class="nav-item" data-page="wallet.html" href="wallet.html" aria-label="Wallet">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 12V22H4V12"/>
+        <path d="M22 7H2v5h20V7z"/>
+        <path d="M12 22V7"/>
+        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+      </svg>
+      <span>Wallet</span>
+      <span class="nav-tooltip" aria-hidden="true">Wallet</span>
+    </a>
+    <a class="nav-item" data-page="profile.html" href="profile.html" aria-label="Profile">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span>Profile</span>
+      <span class="nav-tooltip" aria-hidden="true">Profile</span>
+    </a>
+  </nav>
+
+</div>
+
+<!-- Firebase -->
+<script type="module" src="js/app.js"></script>
+
+<script>
+  // ── Rules State ─────────────────────────────────────────
+  const TOTAL_RULES    = 16;
+  const STORAGE_KEY    = 'ematch_rules_accepted';
+  let   acceptedRules  = new Set();
+
+  // ── Load saved state ────────────────────────────────────
+  function loadSaved() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const arr = JSON.parse(saved);
+        acceptedRules = new Set(arr);
+      }
+    } catch (_) {}
+  }
+
+  // ── Save state ──────────────────────────────────────────
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...acceptedRules]));
+    } catch (_) {}
+  }
+
+  // ── Toggle rule open/close ───────────────────────────────
+  window.toggleRule = function(ruleId) {
+    const card = document.getElementById(ruleId);
+    if (!card) return;
+    card.classList.toggle('open');
+  };
+
+  // ── Toggle accept ────────────────────────────────────────
+  window.toggleAccept = function(ruleId) {
+    const ruleNum = ruleId.replace('rule-','');
+    const chk     = document.getElementById('chk-' + ruleId);
+    const card    = document.getElementById(ruleId);
+    if (!chk || !card) return;
+
+    if (acceptedRules.has(ruleNum)) {
+      acceptedRules.delete(ruleNum);
+      chk.classList.remove('checked');
+      card.classList.remove('accepted');
+    } else {
+      acceptedRules.add(ruleNum);
+      chk.classList.add('checked');
+      card.classList.add('accepted');
+      // Auto-close after accept
+      setTimeout(() => card.classList.remove('open'), 500);
+    }
+
+    saveState();
+    updateProgress();
+  };
+
+  // ── Accept all ───────────────────────────────────────────
+  window.acceptAll = function() {
+    for (let i = 1; i <= TOTAL_RULES; i++) {
+      const ruleId = 'rule-' + i;
+      const chk    = document.getElementById('chk-' + ruleId);
+      const card   = document.getElementById(ruleId);
+      acceptedRules.add(String(i));
+      if (chk)  chk.classList.add('checked');
+      if (card) {
+        card.classList.add('accepted');
+        card.classList.remove('open');
+      }
+    }
+    saveState();
+    updateProgress();
+  };
+
+  // ── Update progress bar ──────────────────────────────────
+  function updateProgress() {
+    const count   = acceptedRules.size;
+    const pct     = Math.round((count / TOTAL_RULES) * 100);
+    const fill    = document.getElementById('progress-fill');
+    const pctEl   = document.getElementById('progress-pct');
+    const remain  = document.getElementById('remaining-count');
+    const notUI   = document.getElementById('not-accepted-ui');
+    const stamp   = document.getElementById('accepted-stamp');
+    const stampDt = document.getElementById('stamp-date');
+
+    if (fill)   fill.style.width = pct + '%';
+    if (pctEl)  pctEl.textContent = pct + '%';
+
+    const left = TOTAL_RULES - count;
+    if (remain) {
+      remain.textContent = left > 0
+        ? `${left} xeer ayaa hadhay`
+        : 'Dhammaan xeerarka waa la aqbalay ✅';
+    }
+
+    // All accepted?
+    if (count >= TOTAL_RULES) {
+      if (notUI)   notUI.style.display  = 'none';
+      if (stamp)   stamp.classList.add('visible');
+      if (stampDt) {
+        const now = new Date();
+        stampDt.textContent = 'Taariikhda: ' + now.toLocaleDateString('so-SO') +
+          ' ' + now.toLocaleTimeString('so-SO', {hour:'2-digit',minute:'2-digit'});
+      }
+      // Save acceptance date
+      try {
+        localStorage.setItem('ematch_rules_date', new Date().toISOString());
+      } catch (_) {}
+    } else {
+      if (notUI) notUI.style.display   = '';
+      if (stamp) stamp.classList.remove('visible');
+    }
+  }
+
+  // ── Restore UI from saved ─────────────────────────────────
+  function restoreUI() {
+    acceptedRules.forEach(num => {
+      const ruleId = 'rule-' + num;
+      const chk    = document.getElementById('chk-' + ruleId);
+      const card   = document.getElementById(ruleId);
+      if (chk)  chk.classList.add('checked');
+      if (card) card.classList.add('accepted');
+    });
+    updateProgress();
+  }
+
+  // ── Init ─────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    loadSaved();
+    restoreUI();
+
+    // Open first rule by default
+    const first = document.getElementById('rule-1');
+    if (first && !acceptedRules.has('1')) {
+      first.classList.add('open');
+    }
+  });
+</script>
+
+</body>
+</html>
