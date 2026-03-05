@@ -1,6 +1,5 @@
-
 // ============================================================
-// eMatch — js/app.js  (v2.2 — Complete)
+// eMatch — js/app.js  (v2.3 — Netlify Fix)
 // ============================================================
 
 import { initializeApp } from
@@ -77,7 +76,12 @@ function loadCacheInstant() {
     currentUserData         = data;
     window._ematch_uid      = data.uid;
     window._ematch_userdata = data;
+
     updateHeaderUI();
+    requestAnimationFrame(() => updateHeaderUI());
+    setTimeout(() => updateHeaderUI(), 300);
+    setTimeout(() => updateHeaderUI(), 800);
+
   } catch (_) {}
 }
 
@@ -299,14 +303,28 @@ async function loadUserData(uid) {
 // ── 8. UPDATE HEADER UI ────────────────────────────────────
 function updateHeaderUI() {
   if (!currentUserData) return;
-  const initials = (currentUserData.fullName || 'U')
-    .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  document.querySelectorAll('.avatar')
-    .forEach(a => { a.textContent = initials; });
-  document.querySelectorAll('.coin-balance-display')
-    .forEach(c => {
-      c.textContent = (currentUserData.coinBalance || 0).toLocaleString();
-    });
+
+  const fullName = currentUserData.fullName || currentUserData.displayName || 'U';
+  const initials = fullName
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'U';
+
+  const coins = (currentUserData.coinBalance || 0).toLocaleString();
+
+  document.querySelectorAll('.avatar').forEach(a => {
+    a.textContent = initials;
+  });
+
+  document.querySelectorAll(
+    '.coin-balance-display, #header-coins, #nav-coins'
+  ).forEach(c => {
+    c.textContent = coins;
+  });
+
   const adminRoles = ['administrator','owner','partner_manager'];
   if (adminRoles.includes(currentUserData.role)) {
     document.querySelectorAll('.admin-only')
@@ -520,7 +538,6 @@ function renderMatchCard(id, m) {
 function loadMatches(container, filter = 'all') {
   if (!container) return;
 
-  // ✅ CACHE: Markiiba soo muuji
   const cached = PageCache.get('matches_' + filter);
   if (cached && cached.length > 0) {
     container.innerHTML = cached.map(m => renderMatchCard(m.id, m)).join('');
@@ -1015,7 +1032,6 @@ function initFilterChips(matchesContainer) {
 
 // ── 25. PROFILE STATS ──────────────────────────────────────
 async function loadProfileStats(uid) {
-  // ✅ CACHE: Markiiba soo muuji
   const cached = PageCache.get('profile_stats_' + uid);
   if (cached) {
     const el = id => document.getElementById(id);
@@ -1087,7 +1103,11 @@ function startRealtimeUserListener(uid) {
         createdAt: currentUserData.createdAt?.toDate?.()?.toISOString()||null
       }));
     } catch (_) {}
+
     updateHeaderUI();
+    requestAnimationFrame(() => updateHeaderUI());
+    setTimeout(() => updateHeaderUI(), 200);
+
     const page = window.location.pathname.split('/').pop();
     if (page === 'wallet.html') {
       const bal = currentUserData.coinBalance  ||0;
@@ -1109,11 +1129,14 @@ function startRealtimeUserListener(uid) {
 }
 
 // ══════════════════════════════════════════════════════════
-// ── 28. MAIN DOMContentLoaded ──────────────────────────────
+// ── 28. MAIN DOMContentLoaded ─────────────────────────────
 // ══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
 
   loadCacheInstant();
+  setTimeout(() => {
+    if (currentUserData) updateHeaderUI();
+  }, 500);
 
   const page = window.location.pathname.split('/').pop() || 'index.html';
 
