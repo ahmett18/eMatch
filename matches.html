@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="so" dir="ltr">
 <head>
@@ -12,104 +13,37 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
   <style>
     .search-bar {
-      position: sticky;
-      top: 56px;
-      z-index: 90;
+      position: sticky; top: 56px; z-index: 90;
       background: rgba(13,17,23,.95);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       padding: var(--sp-sm) var(--sp-md);
       border-bottom: 1px solid var(--glass-border);
     }
-    .search-input-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
+    .search-input-wrap { position: relative; display: flex; align-items: center; }
     .search-input-wrap svg {
-      position: absolute;
-      left: 14px;
-      color: var(--text-muted);
-      width: 18px; height: 18px;
-      pointer-events: none;
+      position: absolute; left: 14px;
+      color: var(--text-muted); width: 18px; height: 18px; pointer-events: none;
     }
     .search-input-wrap input {
-      padding-left: 42px;
-      min-height: 42px;
-      font-size: 14px;
-      border-radius: var(--r-full);
-    }
-    .matches-count {
-      font-size: 12px;
-      color: var(--text-muted);
-      padding: var(--sp-sm) var(--sp-md) 0;
-    }
-    .match-list-item {
-      display: flex;
-      align-items: center;
-      gap: var(--sp-md);
-      padding: var(--sp-md);
-      border-bottom: 1px solid var(--glass-border);
-      cursor: pointer;
-      transition: background var(--dur-fast) var(--ease);
-      text-decoration: none;
-      color: inherit;
-    }
-    .match-list-item:active { background: var(--glass-bg); }
-    .match-list-icon {
-      width: 52px; height: 52px;
-      border-radius: var(--r-md);
-      background: linear-gradient(135deg, #1a2744, #0f1b35);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px; flex-shrink: 0;
-      position: relative;
-      overflow: hidden;
-    }
-    .match-list-info { flex: 1; min-width: 0; }
-    .match-list-title {
-      font-size: 15px; font-weight: 700;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-bottom: 4px;
-    }
-    .match-list-meta {
-      display: flex; align-items: center; gap: 6px;
-      flex-wrap: wrap;
-    }
-    .match-list-right {
-      display: flex; flex-direction: column;
-      align-items: flex-end; gap: 4px; flex-shrink: 0;
-    }
-    .match-stake-big {
-      font-size: 16px; font-weight: 900;
-      color: var(--accent-green);
+      padding-left: 42px; min-height: 42px;
+      font-size: 14px; border-radius: var(--r-full);
     }
     .platform-selector {
-      display: flex;
-      gap: var(--sp-sm);
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding: var(--sp-sm) var(--sp-md);
+      display: flex; gap: var(--sp-sm); overflow-x: auto;
+      scrollbar-width: none; padding: var(--sp-sm) var(--sp-md);
     }
     .platform-selector::-webkit-scrollbar { display: none; }
     .platform-btn {
-      flex-shrink: 0;
-      display: flex; flex-direction: column;
-      align-items: center; gap: 4px;
-      padding: 8px 14px;
-      background: var(--bg-card);
-      border: 1.5px solid var(--border);
-      border-radius: var(--r-md);
-      cursor: pointer;
+      flex-shrink: 0; display: flex; flex-direction: column;
+      align-items: center; gap: 4px; padding: 8px 14px;
+      background: var(--bg-card); border: 1.5px solid var(--border);
+      border-radius: var(--r-md); cursor: pointer;
       transition: all var(--dur-fast) var(--ease);
-      min-width: 64px;
-      font-family: inherit;
+      min-width: 64px; font-family: inherit;
     }
     .platform-btn .icon  { font-size: 22px; }
     .platform-btn .label { font-size: 10px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
-    .platform-btn.active {
-      background: rgba(0,230,118,.1);
-      border-color: var(--accent-green);
-    }
+    .platform-btn.active { background: rgba(0,230,118,.1); border-color: var(--accent-green); }
     .platform-btn.active .label { color: var(--accent-green); }
     .platform-btn:active { transform: scale(.93); }
     .sort-bar {
@@ -118,142 +52,128 @@
       border-bottom: 1px solid var(--glass-border);
     }
     .sort-select {
-      min-height: 34px;
-      font-size: 12px;
-      padding: 0 30px 0 10px;
-      border-radius: var(--r-full);
-      width: auto;
+      min-height: 34px; font-size: 12px;
+      padding: 0 30px 0 10px; border-radius: var(--r-full); width: auto;
     }
-    .empty-state {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: var(--sp-xl) var(--sp-md);
-      text-align: center;
-      min-height: 300px;
+    .match-list-item {
+      display: flex; align-items: center; gap: var(--sp-md);
+      padding: var(--sp-md); border-bottom: 1px solid var(--glass-border);
+      cursor: pointer; transition: background var(--dur-fast) var(--ease);
     }
-    .empty-state .icon { font-size: 56px; margin-bottom: var(--sp-md); }
+    .match-list-item:active { background: var(--glass-bg); }
+    .match-list-icon {
+      width: 52px; height: 52px; border-radius: var(--r-md);
+      background: linear-gradient(135deg,#1a2744,#0f1b35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0; position: relative; overflow: hidden;
+    }
+    .match-list-info { flex: 1; min-width: 0; }
+    .match-list-title {
+      font-size: 15px; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;
+    }
+    .match-list-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .match-list-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .match-stake-big { font-size: 16px; font-weight: 900; color: var(--accent-green); }
     .live-count-badge {
       display: inline-flex; align-items: center; gap: 4px;
-      background: rgba(239,68,68,.15);
-      color: var(--accent-red);
-      font-size: 11px; font-weight: 700;
-      padding: 2px 8px;
-      border-radius: var(--r-full);
-      border: 1px solid rgba(239,68,68,.3);
+      background: rgba(239,68,68,.15); color: var(--accent-red);
+      font-size: 11px; font-weight: 700; padding: 2px 8px;
+      border-radius: var(--r-full); border: 1px solid rgba(239,68,68,.3);
     }
     .live-count-badge::before {
-      content: '';
-      width: 6px; height: 6px;
-      background: var(--accent-red);
-      border-radius: 50%;
+      content: ''; width: 6px; height: 6px;
+      background: var(--accent-red); border-radius: 50%;
       animation: pulse 1.2s ease-in-out infinite;
     }
     .prize-pool-banner {
-      background: linear-gradient(135deg, #1a0a2e 0%, #0d2137 100%);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--r-md);
-      padding: var(--sp-md);
-      margin: var(--sp-sm) var(--sp-md);
-      display: flex;
-      align-items: center;
-      gap: var(--sp-md);
-      position: relative;
-      overflow: hidden;
+      background: linear-gradient(135deg,#1a0a2e,#0d2137);
+      border: 1px solid var(--glass-border); border-radius: var(--r-md);
+      padding: var(--sp-md); margin: var(--sp-sm) var(--sp-md);
+      display: flex; align-items: center; gap: var(--sp-md);
+      position: relative; overflow: hidden;
     }
     .prize-pool-banner::before {
-      content: '';
-      position: absolute;
-      top: -20px; right: -20px;
+      content: ''; position: absolute; top: -20px; right: -20px;
       width: 100px; height: 100px;
-      background: radial-gradient(circle, rgba(255,215,0,.15), transparent 70%);
+      background: radial-gradient(circle,rgba(255,215,0,.15),transparent 70%);
       border-radius: 50%;
     }
     .prize-pool-text { flex: 1; position: relative; z-index: 1; }
     .prize-pool-text h3 { font-size: 15px; margin-bottom: 2px; }
     .prize-pool-text p  { font-size: 12px; margin: 0; }
-    .prize-pool-amount {
-      font-size: 22px; font-weight: 900;
-      color: var(--accent-gold);
-      position: relative; z-index: 1;
+    .prize-pool-amount { font-size: 22px; font-weight: 900; color: var(--accent-gold); position: relative; z-index: 1; }
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: var(--sp-xl) var(--sp-md);
+      text-align: center; min-height: 300px;
     }
+    .empty-state .icon { font-size: 56px; margin-bottom: var(--sp-md); }
   </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- Offline Banner -->
   <div id="offline-banner" class="offline-banner hidden" role="alert" aria-live="assertive">
-    📵 Internetka kuma xidna — ficilladaadu way ka xidantahay
+    📵 Internetka kuma xidna
   </div>
 
-  <!-- ── Top Header ─────────────────────────────────────── -->
+  <!-- Header -->
   <header class="top-header">
     <div class="logo">Matches</div>
     <div class="header-actions">
-      <div class="coin-chip"
-        onclick="window.location.href='wallet.html'"
-        role="button" tabindex="0"
-        aria-label="Wallet fur">
+      <div class="coin-chip" onclick="window.location.href='wallet.html'"
+        role="button" tabindex="0" aria-label="Wallet">
         🪙 <span class="coin-balance-display">—</span>
       </div>
-      <div class="avatar" id="avatar-btn"
-        onclick="window.location.href='profile.html'"
-        role="button" tabindex="0"
-        aria-label="Profile">?</div>
+      <div class="avatar" onclick="window.location.href='profile.html'"
+        role="button" tabindex="0" aria-label="Profile">?</div>
     </div>
   </header>
 
-  <!-- ── Search Bar ─────────────────────────────────────── -->
+  <!-- Search -->
   <div class="search-bar">
     <div class="search-input-wrap">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
         fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
-      <input
-        type="search"
-        id="matches-search"
+      <input type="search" id="matches-search"
         placeholder="Platform, cinwaan ku raadi..."
-        inputmode="search"
-        autocomplete="off"
-        aria-label="Matches ku raadi">
+        inputmode="search" autocomplete="off" aria-label="Matches ku raadi">
     </div>
   </div>
 
-  <!-- ── Main Content ───────────────────────────────────── -->
   <main class="page-content" role="main">
 
-    <!-- Prize Pool Banner -->
+    <!-- Prize Pool -->
     <div class="prize-pool-banner">
       <div class="prize-pool-text">
         <h3>🏆 Active Prize Pools</h3>
         <p>Hadda socda matches-ka ku biir</p>
       </div>
-      <div class="prize-pool-amount" id="total-prize-pool">
-        🪙 <span id="prize-pool-number">—</span>
-      </div>
+      <div class="prize-pool-amount">🪙 <span id="prize-pool-number">—</span></div>
     </div>
 
-    <!-- Status Summary -->
+    <!-- Summary Cards -->
     <div style="display:flex;gap:var(--sp-sm);padding:0 var(--sp-md) var(--sp-sm)">
       <div class="card card-glass" style="flex:1;padding:10px;text-align:center;cursor:pointer"
-        onclick="setStatusFilter('open')" id="summary-open">
+        id="summary-open" onclick="matchesPageSetFilter('open')">
         <div style="font-size:18px;font-weight:900;color:var(--accent-green)" id="count-open">—</div>
         <div style="font-size:10px;color:var(--text-muted);font-weight:600">FURAN</div>
       </div>
       <div class="card card-glass" style="flex:1;padding:10px;text-align:center;cursor:pointer"
-        onclick="setStatusFilter('locked')" id="summary-locked">
+        id="summary-locked" onclick="matchesPageSetFilter('locked')">
         <div style="font-size:18px;font-weight:900;color:var(--accent-red)" id="count-locked">—</div>
         <div style="font-size:10px;color:var(--text-muted);font-weight:600">SOCDA</div>
       </div>
       <div class="card card-glass" style="flex:1;padding:10px;text-align:center;cursor:pointer"
-        onclick="setStatusFilter('done')" id="summary-done">
+        id="summary-done" onclick="matchesPageSetFilter('done')">
         <div style="font-size:18px;font-weight:900;color:var(--text-secondary)" id="count-done">—</div>
         <div style="font-size:10px;color:var(--text-muted);font-weight:600">DHAMAADAY</div>
       </div>
       <div class="card card-glass" style="flex:1;padding:10px;text-align:center;cursor:pointer"
-        onclick="setStatusFilter('all')" id="summary-all">
+        onclick="matchesPageSetFilter('all')">
         <div style="font-size:18px;font-weight:900;color:var(--accent-blue)" id="count-all">—</div>
         <div style="font-size:10px;color:var(--text-muted);font-weight:600">DHAMMAAN</div>
       </div>
@@ -261,51 +181,43 @@
 
     <!-- Platform Filter -->
     <div class="platform-selector" role="group" aria-label="Platform filter">
-      <button class="platform-btn active" data-platform="all" aria-pressed="true">
-        <span class="icon">🎮</span>
-        <span class="label">Dhammaan</span>
+      <button class="platform-btn active" data-platform="all">
+        <span class="icon">🎮</span><span class="label">Dhammaan</span>
       </button>
-      <button class="platform-btn" data-platform="FIFA" aria-pressed="false">
-        <span class="icon">⚽</span>
-        <span class="label">FIFA</span>
+      <button class="platform-btn" data-platform="FIFA">
+        <span class="icon">⚽</span><span class="label">FIFA</span>
       </button>
-      <button class="platform-btn" data-platform="FC Mobile" aria-pressed="false">
-        <span class="icon">⚽</span>
-        <span class="label">FC Mobile</span>
+      <button class="platform-btn" data-platform="FC Mobile">
+        <span class="icon">⚽</span><span class="label">FC Mobile</span>
       </button>
-      <button class="platform-btn" data-platform="eFootball" aria-pressed="false">
-        <span class="icon">⚽</span>
-        <span class="label">eFootball</span>
+      <button class="platform-btn" data-platform="eFootball">
+        <span class="icon">⚽</span><span class="label">eFootball</span>
       </button>
-      <button class="platform-btn" data-platform="NBA 2K" aria-pressed="false">
-        <span class="icon">🏀</span>
-        <span class="label">NBA 2K</span>
+      <button class="platform-btn" data-platform="NBA 2K">
+        <span class="icon">🏀</span><span class="label">NBA 2K</span>
       </button>
-      <button class="platform-btn" data-platform="PUBG" aria-pressed="false">
-        <span class="icon">🔫</span>
-        <span class="label">PUBG</span>
+      <button class="platform-btn" data-platform="PUBG">
+        <span class="icon">🔫</span><span class="label">PUBG</span>
       </button>
-      <button class="platform-btn" data-platform="Free Fire" aria-pressed="false">
-        <span class="icon">🔫</span>
-        <span class="label">Free Fire</span>
+      <button class="platform-btn" data-platform="Free Fire">
+        <span class="icon">🔫</span><span class="label">Free Fire</span>
       </button>
-      <button class="platform-btn" data-platform="COD" aria-pressed="false">
-        <span class="icon">🔫</span>
-        <span class="label">COD</span>
+      <button class="platform-btn" data-platform="COD">
+        <span class="icon">🔫</span><span class="label">COD</span>
       </button>
     </div>
 
-    <!-- Sort + Count Bar -->
+    <!-- Sort + Count -->
     <div class="sort-bar">
       <div style="display:flex;align-items:center;gap:var(--sp-sm)">
-        <span class="matches-count" style="padding:0">
+        <span style="font-size:12px;color:var(--text-muted)">
           <span id="visible-count">—</span> match
         </span>
-        <span class="live-count-badge" id="live-badge">
+        <span class="live-count-badge">
           <span id="live-count">0</span> LIVE
         </span>
       </div>
-      <select class="sort-select" id="sort-select" aria-label="Sort order">
+      <select class="sort-select" id="sort-select" aria-label="Sort">
         <option value="newest">Cusub Hore</option>
         <option value="oldest">Duq Hore</option>
         <option value="stake-high">Stake ↑</option>
@@ -313,7 +225,7 @@
       </select>
     </div>
 
-    <!-- ── Status Filter Chips ───────────────────────────── -->
+    <!-- Status Chips -->
     <div class="filter-bar" role="tablist" aria-label="Status filter">
       <button class="filter-chip active" data-filter="all"    role="tab" aria-selected="true">🎮 Dhammaan</button>
       <button class="filter-chip"        data-filter="open"   role="tab" aria-selected="false">🟢 Furan</button>
@@ -321,12 +233,9 @@
       <button class="filter-chip"        data-filter="done"   role="tab" aria-selected="false">✅ Dhammaaday</button>
     </div>
 
-    <!-- ── Matches List ──────────────────────────────────── -->
-    <div id="matches-full-list"
-      role="list"
-      aria-live="polite"
-      aria-label="Matches list">
-      <!-- Skeletons -->
+    <!-- Matches List -->
+    <div id="matches-full-list" role="list" aria-live="polite">
+      <!-- Skeleton -->
       <div class="match-list-item" style="pointer-events:none">
         <div class="skeleton" style="width:52px;height:52px;border-radius:12px;flex-shrink:0"></div>
         <div style="flex:1">
@@ -360,37 +269,11 @@
           <div class="skeleton" style="width:35px;height:14px;border-radius:4px"></div>
         </div>
       </div>
-      <div class="match-list-item" style="pointer-events:none">
-        <div class="skeleton" style="width:52px;height:52px;border-radius:12px;flex-shrink:0"></div>
-        <div style="flex:1">
-          <div class="skeleton sk-line" style="width:55%;margin-bottom:8px"></div>
-          <div class="skeleton sk-line" style="width:65%"></div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-          <div class="skeleton" style="width:50px;height:18px;border-radius:4px"></div>
-          <div class="skeleton" style="width:40px;height:14px;border-radius:4px"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Create CTA -->
-    <div class="p-md mt-md" id="create-cta" style="display:none">
-      <div class="card" style="text-align:center;padding:var(--sp-lg)">
-        <div style="font-size:40px;margin-bottom:var(--sp-sm)">🎮</div>
-        <h3 style="margin-bottom:var(--sp-sm)">Match cusub abuur!</h3>
-        <p style="margin-bottom:var(--sp-md)">Lacagta kakeydi, tartam bilow</p>
-        <a href="dashboard.html"
-          onclick="localStorage.setItem('open_create','1')"
-          class="btn btn-primary"
-          style="text-decoration:none">
-          + Match Abuur
-        </a>
-      </div>
     </div>
 
   </main>
 
-  <!-- ── Bottom Navigation ──────────────────────────────── -->
+  <!-- Bottom Nav -->
   <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
     <a class="nav-item" data-page="dashboard.html" href="dashboard.html" aria-label="Home">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -416,7 +299,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="12" y1="5" x2="12" y2="19"/>
-          <line x1="5" y1="12" x2="19" y2="12"/>
+          <line x1="5"  y1="12" x2="19" y2="12"/>
         </svg>
       </div>
       <span style="color:var(--text-muted)">Abuur</span>
@@ -445,8 +328,6 @@
 
 </div>
 
-<!-- ════ MODALS ════════════════════════════════════════════ -->
-
 <!-- Match Detail Modal -->
 <div id="match-modal" class="modal-overlay" role="dialog"
   aria-modal="true" aria-label="Match faahfaahin">
@@ -460,440 +341,8 @@
   </div>
 </div>
 
-<!-- Firebase SDK -->
+<!-- app.js OOKELIYA — inline script la'aan -->
 <script type="module" src="js/app.js"></script>
 
-<!-- Matches Page Logic -->
-<script type="module">
-  import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { getFirestore, collection, query, orderBy,
-           limit, onSnapshot, where, doc, getDoc }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  // ── State ──────────────────────────────────────────────
-  let allMatches      = [];
-  let currentFilter   = 'all';
-  let currentPlatform = 'all';
-  let currentSort     = 'newest';
-  let searchQuery     = '';
-  let currentUser     = null;
-  let currentUserData = null;
-
-  // ── Platform emoji map ─────────────────────────────────
-  const platformEmoji = {
-    'FIFA':'⚽','FC Mobile':'⚽','eFootball':'⚽',
-    'NBA 2K':'🏀','PUBG':'🔫','Free Fire':'🔫','COD':'🔫'
-  };
-
-  // ── Init ───────────────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', () => {
-
-    // Platform buttons
-    document.querySelectorAll('.platform-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.platform-btn').forEach(b => {
-          b.classList.remove('active');
-          b.setAttribute('aria-pressed','false');
-        });
-        btn.classList.add('active');
-        btn.setAttribute('aria-pressed','true');
-        currentPlatform = btn.dataset.platform;
-        renderMatches();
-      });
-    });
-
-    // Status filter chips
-    document.querySelectorAll('.filter-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        document.querySelectorAll('.filter-chip').forEach(c => {
-          c.classList.remove('active');
-          c.setAttribute('aria-selected','false');
-        });
-        chip.classList.add('active');
-        chip.setAttribute('aria-selected','true');
-        currentFilter = chip.dataset.filter;
-        renderMatches();
-      });
-    });
-
-    // Search
-    document.getElementById('matches-search')
-      ?.addEventListener('input', function() {
-        searchQuery = this.value.toLowerCase().trim();
-        renderMatches();
-      });
-
-    // Sort
-    document.getElementById('sort-select')
-      ?.addEventListener('change', function() {
-        currentSort = this.value;
-        renderMatches();
-      });
-
-    // Modal overlay close
-    document.querySelectorAll('.modal-overlay').forEach(o => {
-      o.addEventListener('click', e => {
-        if (e.target === o) closeModalLocal(o.id);
-      });
-    });
-
-    // Load matches realtime
-    loadMatchesRealtime();
-  });
-
-  // ── Load Matches (real-time) ───────────────────────────
-  function loadMatchesRealtime() {
-    const q = query(
-      collection(window._ematch_db || getDefaultDb(), 'matches'),
-      orderBy('createdAt', 'desc'),
-      limit(50)
-    );
-
-    onSnapshot(q, snap => {
-      allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      updateSummaryStats();
-      renderMatches();
-    }, err => {
-      document.getElementById('matches-full-list').innerHTML =
-        `<div class="empty-state"><div class="icon">❌</div><h3>Khalad</h3><p>${err.message}</p></div>`;
-    });
-  }
-
-  // ── Get Firestore instance ─────────────────────────────
-  function getDefaultDb() {
-    // app.js waxay window._ematch_db ku kaydisaa — fallback
-    if (window._ematch_db) return window._ematch_db;
-    const cfg = window._ematch_config;
-    if (!cfg) return null;
-    const a = initializeApp(cfg, 'matches-app');
-    return getFirestore(a);
-  }
-
-  // ── Update Summary Stats ───────────────────────────────
-  function updateSummaryStats() {
-    const open   = allMatches.filter(m => m.status === 'open').length;
-    const locked = allMatches.filter(m => m.status === 'locked').length;
-    const done   = allMatches.filter(m => m.status === 'done').length;
-    const total  = allMatches.length;
-
-    document.getElementById('count-open').textContent   = open;
-    document.getElementById('count-locked').textContent = locked;
-    document.getElementById('count-done').textContent   = done;
-    document.getElementById('count-all').textContent    = total;
-    document.getElementById('live-count').textContent   = locked;
-
-    // Total prize pool (open + locked matches)
-    const pool = allMatches
-      .filter(m => m.status !== 'done')
-      .reduce((sum, m) => sum + (m.stakeCoins || 0), 0);
-    document.getElementById('prize-pool-number').textContent =
-      pool > 0 ? pool.toLocaleString() : '0';
-  }
-
-  // ── Filter + Sort + Search ─────────────────────────────
-  function getFilteredMatches() {
-    let list = [...allMatches];
-
-    // Status filter
-    if (currentFilter !== 'all') {
-      list = list.filter(m => m.status === currentFilter);
-    }
-
-    // Platform filter
-    if (currentPlatform !== 'all') {
-      list = list.filter(m => m.platform === currentPlatform);
-    }
-
-    // Search
-    if (searchQuery) {
-      list = list.filter(m =>
-        (m.platform  || '').toLowerCase().includes(searchQuery) ||
-        (m.title     || '').toLowerCase().includes(searchQuery) ||
-        (m.createdBy || '').toLowerCase().includes(searchQuery)
-      );
-    }
-
-    // Sort
-    list.sort((a, b) => {
-      if (currentSort === 'newest')     return (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0);
-      if (currentSort === 'oldest')     return (a.createdAt?.seconds||0) - (b.createdAt?.seconds||0);
-      if (currentSort === 'stake-high') return (b.stakeCoins||0) - (a.stakeCoins||0);
-      if (currentSort === 'stake-low')  return (a.stakeCoins||0) - (b.stakeCoins||0);
-      return 0;
-    });
-
-    return list;
-  }
-
-  // ── Render Matches ─────────────────────────────────────
-  function renderMatches() {
-    const list      = getFilteredMatches();
-    const container = document.getElementById('matches-full-list');
-    const cta       = document.getElementById('create-cta');
-    const countEl   = document.getElementById('visible-count');
-
-    if (countEl) countEl.textContent = list.length;
-
-    if (list.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <div class="icon">🎮</div>
-          <h3>${searchQuery ? 'Raadinta natiijo ma leh' : 'Match la\'aan'}</h3>
-          <p>${searchQuery ? '"'+searchQuery+'" lama helin' : 'Hadda wax match ah ma jiro.'}</p>
-        </div>`;
-      if (cta) cta.style.display = 'block';
-      return;
-    }
-
-    if (cta) cta.style.display = 'none';
-    container.innerHTML = list.map(m => renderMatchListItem(m)).join('');
-
-    // Click handlers
-    container.querySelectorAll('.match-list-item').forEach(item => {
-      item.addEventListener('click', () => openMatchDetailModal(item.dataset.id));
-    });
-  }
-
-  // ── Render single list item ────────────────────────────
-  function renderMatchListItem(m) {
-    const emoji   = platformEmoji[m.platform] || '🎮';
-    const isLive  = m.status === 'locked';
-    const isDone  = m.status === 'done';
-    const timeStr = m.createdAt?.toDate
-      ? m.createdAt.toDate().toLocaleDateString('so-SO') : 'Dhawaan';
-
-    return `
-      <div class="match-list-item" data-id="${m.id}" role="listitem" tabindex="0"
-        aria-label="${m.platform} match — ${m.stakeCoins} coins">
-        <div class="match-list-icon">
-          ${emoji}
-          ${isLive ? '<div style="position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--accent-red);border-radius:50%;animation:pulse 1.2s ease-in-out infinite"></div>' : ''}
-        </div>
-        <div class="match-list-info">
-          <div class="match-list-title">${m.title || m.platform + ' Match'}</div>
-          <div class="match-list-meta">
-            <span class="match-platform-tag">${m.platform}</span>
-            <span class="status-pill ${m.status || 'open'}">${
-              m.status === 'open'   ? 'Furan'      :
-              m.status === 'locked' ? '🔴 LIVE'    :
-              m.status === 'done'   ? 'Dhammaaday' : m.status
-            }</span>
-            ${isDone && m.winnerId ? `<span style="font-size:10px;color:var(--accent-gold)">🏆 Winner</span>` : ''}
-          </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:3px">
-            ${m.joinedBy ? '2/2 ▶ Socda' : '1/2 ⏳ Sugaysa'} · ${timeStr}
-          </div>
-        </div>
-        <div class="match-list-right">
-          <span class="match-stake-big">🪙${(m.stakeCoins||0).toLocaleString()}</span>
-          <span style="font-size:10px;color:var(--text-muted)">
-            Prize: 🪙${((m.stakeCoins||0)*2).toLocaleString()}
-          </span>
-        </div>
-      </div>`;
-  }
-
-  // ── Match Detail Modal ─────────────────────────────────
-  async function openMatchDetailModal(matchId) {
-    openModalLocal('match-modal');
-    const content = document.getElementById('match-modal-content');
-    if (!content) return;
-
-    content.innerHTML = `
-      <div class="modal-handle"></div>
-      <div class="skeleton sk-block mb-md"></div>
-      <div class="skeleton sk-line" style="width:70%"></div>
-      <div class="skeleton sk-line" style="width:50%"></div>`;
-
-    try {
-      const db   = getDefaultDb();
-      if (!db) return;
-      const snap = await getDoc(doc(db, 'matches', matchId));
-      if (!snap.exists()) {
-        content.innerHTML = '<p class="text-muted p-md">Match la ma helin</p>'; return;
-      }
-
-      const m       = snap.data();
-      const uid     = window._ematch_uid || '';
-      const uData   = window._ematch_userdata || {};
-      const canJoin = m.status === 'open'
-                   && uid !== m.createdBy
-                   && !m.joinedBy
-                   && (uData.coinBalance || 0) >= (m.stakeCoins || 0);
-      const noFunds = m.status === 'open'
-                   && uid !== m.createdBy
-                   && !m.joinedBy
-                   && (uData.coinBalance || 0) < (m.stakeCoins || 0);
-
-      const timeStr = m.createdAt?.toDate
-        ? m.createdAt.toDate().toLocaleString('so-SO') : 'Dhawaan';
-
-      content.innerHTML = `
-        <div class="modal-handle"></div>
-        <div class="modal-header">
-          <h2>${platformEmoji[m.platform]||'🎮'} ${m.title || m.platform+' Match'}</h2>
-          <button class="modal-close" onclick="closeModalLocal('match-modal')" aria-label="Xidh">✕</button>
-        </div>
-
-        <div class="match-meta mb-md">
-          <span class="match-platform-tag">${m.platform}</span>
-          <span class="status-pill ${m.status}">${
-            m.status==='open' ? 'Furan' : m.status==='locked' ? '🔴 LIVE' : 'Dhammaaday'
-          }</span>
-        </div>
-
-        <!-- Stats -->
-        <div class="grid-2 mb-md">
-          <div class="card" style="text-align:center;padding:var(--sp-md)">
-            <div style="font-size:22px;font-weight:900;color:var(--accent-green)">
-              🪙${(m.stakeCoins||0).toLocaleString()}
-            </div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Stake</div>
-          </div>
-          <div class="card" style="text-align:center;padding:var(--sp-md)">
-            <div style="font-size:22px;font-weight:900;color:var(--accent-gold)">
-              🪙${((m.stakeCoins||0)*2).toLocaleString()}
-            </div>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Prize Pool</div>
-          </div>
-        </div>
-
-        <!-- Players -->
-        <div class="card mb-md">
-          <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:var(--sp-sm)">
-            CIYAARTOYDA
-          </div>
-          <div class="flex items-center gap-md">
-            <div style="flex:1;text-align:center">
-              <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent-green),var(--accent-blue));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#000;margin:0 auto 6px">
-                ${(m.createdBy||'?')[0].toUpperCase()}
-              </div>
-              <div style="font-size:12px;font-weight:600">
-                ${(m.createdBy||'').slice(0,10)}...
-              </div>
-              <div style="font-size:10px;color:var(--text-muted)">Abuuraha</div>
-              ${m.winnerId === m.createdBy ? '<div style="color:var(--accent-gold);font-size:14px;margin-top:2px">🏆</div>' : ''}
-            </div>
-
-            <div style="font-size:18px;font-weight:900;color:var(--text-muted)">VS</div>
-
-            <div style="flex:1;text-align:center">
-              ${m.joinedBy ? `
-                <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent-red),#dc2626);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;margin:0 auto 6px">
-                  ${(m.joinedBy)[0].toUpperCase()}
-                </div>
-                <div style="font-size:12px;font-weight:600">${m.joinedBy.slice(0,10)}...</div>
-                <div style="font-size:10px;color:var(--text-muted)">Ku biiray</div>
-                ${m.winnerId === m.joinedBy ? '<div style="color:var(--accent-gold);font-size:14px;margin-top:2px">🏆</div>' : ''}
-              ` : `
-                <div style="width:48px;height:48px;border-radius:50%;background:var(--bg-card2);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 6px">⏳</div>
-                <div style="font-size:12px;color:var(--text-muted)">Sugaysa...</div>
-              `}
-            </div>
-          </div>
-        </div>
-
-        <!-- Details -->
-        <div class="card mb-md">
-          <div class="flex justify-between mb-sm">
-            <span class="text-muted" style="font-size:13px">La abuuray</span>
-            <span style="font-size:13px;font-weight:600">${timeStr}</span>
-          </div>
-          <div class="flex justify-between mb-sm">
-            <span class="text-muted" style="font-size:13px">Match ID</span>
-            <span style="font-size:11px;font-family:monospace;color:var(--text-muted)">
-              ${matchId.slice(0,16)}...
-            </span>
-          </div>
-          ${m.completedAt ? `
-          <div class="flex justify-between">
-            <span class="text-muted" style="font-size:13px">Dhammaaday</span>
-            <span style="font-size:13px;font-weight:600">
-              ${m.completedAt.toDate ? m.completedAt.toDate().toLocaleDateString('so-SO') : '—'}
-            </span>
-          </div>` : ''}
-        </div>
-
-        ${canJoin ? `
-          <button class="btn btn-primary" id="btn_join_from_matches"
-            data-id="${matchId}" data-stake="${m.stakeCoins}">
-            <span class="btn-text">🎮 Ku Biir — 🪙 ${(m.stakeCoins||0).toLocaleString()}</span>
-            <div class="btn-spinner"></div>
-          </button>` : ''}
-
-        ${m.status==='open' && uid===m.createdBy ? `
-          <div class="card mt-md" style="text-align:center;background:rgba(0,230,118,.05);border-color:rgba(0,230,118,.2)">
-            <p style="font-size:13px;color:var(--accent-green)">
-              ✅ Adaa abuuray match-kan — qof kale ayaa la sugayaa
-            </p>
-          </div>` : ''}
-
-        ${noFunds ? `
-          <div class="card mt-md" style="border-color:rgba(239,68,68,.3);text-align:center">
-            <p class="text-red" style="font-size:13px;margin-bottom:8px">
-              💸 Lacag kuma filna. Wallet-kaaga ku shub.
-            </p>
-            <a href="wallet.html" class="btn btn-gold btn-sm" style="text-decoration:none;width:auto;margin:0 auto">
-              + Deposit
-            </a>
-          </div>` : ''}`;
-
-      // Join button
-      const joinBtn = content.querySelector('#btn_join_from_matches');
-      if (joinBtn) {
-        joinBtn.addEventListener('click', () => {
-          // app.js joinMatch() global waa expose garanaa
-          if (typeof window.joinMatchGlobal === 'function') {
-            window.joinMatchGlobal(matchId, parseInt(joinBtn.dataset.stake));
-          } else {
-            // Fallback: dashboard-ka u dir
-            localStorage.setItem('pending_join', matchId);
-            window.location.href = 'dashboard.html';
-          }
-        });
-      }
-    } catch (err) {
-      content.innerHTML = `<p class="text-muted p-md">Khalad: ${err.message}</p>`;
-    }
-  }
-
-  // ── Summary card filter shortcut ──────────────────────
-  window.setStatusFilter = function(status) {
-    currentFilter = status;
-    document.querySelectorAll('.filter-chip').forEach(c => {
-      const active = c.dataset.filter === status;
-      c.classList.toggle('active', active);
-      c.setAttribute('aria-selected', active ? 'true' : 'false');
-    });
-    renderMatches();
-  };
-
-  // ── Modal helpers (local scope) ────────────────────────
-  function openModalLocal(id) {
-    const o = document.getElementById(id);
-    if (!o) return;
-    o.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeModalLocal(id) {
-    const o = document.getElementById(id);
-    if (!o) return;
-    o.classList.remove('open');
-    document.body.style.overflow = '';
-  }
-  window.closeModalLocal = closeModalLocal;
-
-  // Online/offline
-  window.addEventListener('offline', () => {
-    const b = document.getElementById('offline-banner');
-    if (b) b.classList.remove('hidden');
-  });
-  window.addEventListener('online', () => {
-    const b = document.getElementById('offline-banner');
-    if (b) b.classList.add('hidden');
-  });
-</script>
 </body>
 </html>

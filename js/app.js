@@ -359,25 +359,41 @@ async function handleSignup(e) {
 
   setLoading(btn, true);
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await setDoc(doc(db, 'users', cred.user.uid), {
-      uid: cred.user.uid, fullName, email, phone,
-      role:'user', coinBalance:0, escrowBalance:0,
-      createdAt: serverTimestamp()
-    });
+    const cred    = await createUserWithEmailAndPassword(auth, email, password);
+    const uid     = cred.user.uid;
+    const newUser = {
+      uid,
+      fullName,
+      email,
+      phone,
+      role:          'user',
+      coinBalance:   0,
+      escrowBalance: 0,
+      createdAt:     serverTimestamp()
+    };
+
+    await setDoc(doc(db, 'users', uid), newUser);
+
+    // ✅ FIX: Cache keydi ka hor redirect
+    try {
+      localStorage.setItem('ematch_user_cache', JSON.stringify({
+        ...newUser,
+        createdAt: new Date().toISOString()
+      }));
+    } catch (_) {}
+
     window.location.replace('dashboard.html');
   } catch (err) {
     setLoading(btn, false);
     const m = {
-      'auth/email-already-in-use':['reg_email',   'Email-kani horey loo isticmaalay'],
-      'auth/weak-password':       ['reg_password','Password-ku aad ayuu u liita'],
-      'auth/invalid-email':       ['reg_email',   'Email-ka foomka sax ma ahan']
+      'auth/email-already-in-use': ['reg_email',   'Email-kani horey loo isticmaalay'],
+      'auth/weak-password':        ['reg_password', 'Password-ku aad ayuu u liita'],
+      'auth/invalid-email':        ['reg_email',    'Email-ka foomka sax ma ahan']
     };
     if (m[err.code]) showError(m[err.code][0], m[err.code][1]);
     else showToast('Khalad: ' + err.message, 'error');
   }
 }
-
 // ── 9. LOGIN ───────────────────────────────────────────────
 async function handleLogin(e) {
   e.preventDefault();
@@ -393,7 +409,21 @@ async function handleLogin(e) {
 
   setLoading(btn, true);
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+
+    // ✅ FIX: User data hel oo cache ku keydi KA HOR redirect
+    const snap = await getDoc(doc(db, 'users', cred.user.uid));
+    if (snap.exists()) {
+      const data = snap.data();
+      try {
+        localStorage.setItem('ematch_user_cache', JSON.stringify({
+          ...data,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || null
+        }));
+      } catch (_) {}
+    }
+
+    window.location.replace('dashboard.html');
   } catch (err) {
     setLoading(btn, false);
     const bad = ['auth/invalid-credential','auth/user-not-found',
@@ -412,22 +442,39 @@ async function handleGoogleSignIn() {
     const cred    = await signInWithPopup(auth, new GoogleAuthProvider());
     const uid     = cred.user.uid;
     const userRef = doc(db, 'users', uid);
-    const snap    = await getDoc(userRef);
+    let   snap    = await getDoc(userRef);
+
     if (!snap.exists()) {
       await setDoc(userRef, {
-        uid, fullName: cred.user.displayName||'',
-        email: cred.user.email||'', phone:'',
-        role:'user', coinBalance:0, escrowBalance:0,
-        createdAt: serverTimestamp()
+        uid,
+        fullName:      cred.user.displayName || '',
+        email:         cred.user.email       || '',
+        phone:         '',
+        role:          'user',
+        coinBalance:   0,
+        escrowBalance: 0,
+        createdAt:     serverTimestamp()
       });
+      snap = await getDoc(userRef);
     }
+
+    // ✅ FIX: Cache keydi ka hor redirect
+    if (snap.exists()) {
+      const data = snap.data();
+      try {
+        localStorage.setItem('ematch_user_cache', JSON.stringify({
+          ...data,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || null
+        }));
+      } catch (_) {}
+    }
+
     window.location.replace('dashboard.html');
   } catch (err) {
     if (err.code !== 'auth/popup-closed-by-user')
       showToast('Google sign-in khalad: ' + err.message, 'error');
   }
 }
-
 // ── 11. PASSWORD RESET ─────────────────────────────────────
 window.handlePasswordReset = async function() {
   const emailInput = document.getElementById('login_email');
@@ -1321,15 +1368,342 @@ document.addEventListener('DOMContentLoaded', async () => {
         .catch(()=>showToast('Koobiyaynta waa fashilantay','error'));
     };
   }
-
   // ════════════════════════════════════════════════════════
-  // MATCHES.HTML
+  // MATCHES.HTML — Logic oo dhan app.js ku jirta
   // ════════════════════════════════════════════════════════
   if (page === 'matches.html') {
     await authGuard(true);
 
-    // Real-time listener billow
+    // Real-time user listener
     startRealtimeUserListener(currentUser.uid);
+
+    // ── State ──────────────────────────────────────────
+    let allMatchesData    = [];
+    let mFilter           = 'all';
+    let mPlatform         = 'all';
+    let mSort             = 'newest';
+    let mSearch           = '';
+    let matchesUnsub      = null;
+
+    const platformEmoji = {
+      'FIFA':'⚽','FC Mobile':'⚽','eFootball':'⚽',
+      'NBA 2K':'🏀','PUBG':'🔫','Free Fire':'🔫','COD':'🔫'
+    };
+
+    // ── Render single list item ─────────────────────────
+    function renderListItem(m) {
+      const emoji  = platformEmoji[m.platform] || '🎮';
+      const isLive = m.status === 'locked';
+      const isDone = m.status === 'done';
+      const time   = m.createdAt?.toDate
+        ? m.createdAt.toDate().toLocaleDateString('so-SO') : 'Dhawaan';
+
+      return `
+        <div class="match-list-item" data-id="${m.id}" role="listitem" tabindex="0">
+          <div class="match-list-icon">
+            ${emoji}
+            ${isLive
+              ? `<div style="position:absolute;top:4px;right:4px;width:8px;height:8px;
+                  background:var(--accent-red);border-radius:50%;
+                  animation:pulse 1.2s ease-in-out infinite"></div>`
+              : ''}
+          </div>
+          <div class="match-list-info">
+            <div class="match-list-title">${m.title || m.platform + ' Match'}</div>
+            <div class="match-list-meta">
+              <span class="match-platform-tag">${m.platform}</span>
+              <span class="status-pill ${m.status||'open'}">${
+                m.status === 'open'   ? 'Furan'      :
+                m.status === 'locked' ? '🔴 LIVE'    :
+                m.status === 'done'   ? 'Dhammaaday' : m.status
+              }</span>
+              ${isDone && m.winnerId
+                ? `<span style="font-size:10px;color:var(--accent-gold)">🏆</span>`
+                : ''}
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">
+              ${m.joinedBy ? '2/2 ▶ Socda' : '1/2 ⏳ Sugaysa'} · ${time}
+            </div>
+          </div>
+          <div class="match-list-right">
+            <span class="match-stake-big">🪙${(m.stakeCoins||0).toLocaleString()}</span>
+            <span style="font-size:10px;color:var(--text-muted)">
+              🏆 ${((m.stakeCoins||0)*2).toLocaleString()}
+            </span>
+          </div>
+        </div>`;
+    }
+
+    // ── Filter + Sort + Search ──────────────────────────
+    function getFiltered() {
+      let list = [...allMatchesData];
+      if (mFilter !== 'all')   list = list.filter(m => m.status   === mFilter);
+      if (mPlatform !== 'all') list = list.filter(m => m.platform === mPlatform);
+      if (mSearch) {
+        list = list.filter(m =>
+          (m.platform||'').toLowerCase().includes(mSearch) ||
+          (m.title   ||'').toLowerCase().includes(mSearch)
+        );
+      }
+      list.sort((a,b) => {
+        if (mSort==='newest')     return (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0);
+        if (mSort==='oldest')     return (a.createdAt?.seconds||0)-(b.createdAt?.seconds||0);
+        if (mSort==='stake-high') return (b.stakeCoins||0)-(a.stakeCoins||0);
+        if (mSort==='stake-low')  return (a.stakeCoins||0)-(b.stakeCoins||0);
+        return 0;
+      });
+      return list;
+    }
+
+    // ── Render matches list ─────────────────────────────
+    function renderMatchesList() {
+      const list      = getFiltered();
+      const container = document.getElementById('matches-full-list');
+      const countEl   = document.getElementById('visible-count');
+      if (countEl) countEl.textContent = list.length;
+
+      if (!container) return;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">🎮</div>
+            <h3>${mSearch ? 'Natiijo la\'aan' : 'Match la\'aan'}</h3>
+            <p>${mSearch ? '"'+mSearch+'" lama helin' : 'Abuur mid cusub!'}</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(m => renderListItem(m)).join('');
+
+      // Click listeners
+      container.querySelectorAll('.match-list-item').forEach(item => {
+        item.addEventListener('click', () => openMatchModalFull(item.dataset.id));
+      });
+    }
+
+    // ── Update summary stats ────────────────────────────
+    function updateStats() {
+      const open   = allMatchesData.filter(m => m.status==='open').length;
+      const locked = allMatchesData.filter(m => m.status==='locked').length;
+      const done   = allMatchesData.filter(m => m.status==='done').length;
+      const total  = allMatchesData.length;
+      const pool   = allMatchesData
+        .filter(m => m.status!=='done')
+        .reduce((s,m) => s+(m.stakeCoins||0), 0);
+
+      const el = id => document.getElementById(id);
+      if (el('count-open'))         el('count-open').textContent         = open;
+      if (el('count-locked'))       el('count-locked').textContent       = locked;
+      if (el('count-done'))         el('count-done').textContent         = done;
+      if (el('count-all'))          el('count-all').textContent          = total;
+      if (el('live-count'))         el('live-count').textContent         = locked;
+      if (el('prize-pool-number'))  el('prize-pool-number').textContent  = pool.toLocaleString();
+    }
+
+    // ── Open match modal (full detail) ─────────────────
+    async function openMatchModalFull(matchId) {
+      openModal('match-modal');
+      const content = document.getElementById('match-modal-content');
+      if (!content) return;
+
+      content.innerHTML = `
+        <div class="modal-handle"></div>
+        <div class="skeleton sk-block mb-md"></div>
+        <div class="skeleton sk-line" style="width:70%"></div>
+        <div class="skeleton sk-line" style="width:50%"></div>`;
+
+      try {
+        const snap = await getDoc(doc(db, 'matches', matchId));
+        if (!snap.exists()) {
+          content.innerHTML='<p class="text-muted p-md">Match la ma helin</p>'; return;
+        }
+        const m       = snap.data();
+        const bal     = currentUserData?.coinBalance || 0;
+        const canJoin = m.status==='open' && currentUser.uid!==m.createdBy
+                     && !m.joinedBy && bal>=(m.stakeCoins||0);
+        const noFunds = m.status==='open' && currentUser.uid!==m.createdBy
+                     && !m.joinedBy && bal<(m.stakeCoins||0);
+
+        content.innerHTML = `
+          <div class="modal-handle"></div>
+          <div class="modal-header">
+            <h2>${platformEmoji[m.platform]||'🎮'} ${m.title||m.platform+' Match'}</h2>
+            <button class="modal-close" onclick="closeModal('match-modal')" aria-label="Xidh">✕</button>
+          </div>
+          <div class="match-meta mb-md">
+            <span class="match-platform-tag">${m.platform}</span>
+            <span class="status-pill ${m.status}">${
+              m.status==='open'?'Furan':m.status==='locked'?'🔴 LIVE':'Dhammaaday'
+            }</span>
+          </div>
+          <div class="grid-2 mb-md">
+            <div class="card" style="text-align:center;padding:var(--sp-md)">
+              <div style="font-size:22px;font-weight:900;color:var(--accent-green)">
+                🪙 ${(m.stakeCoins||0).toLocaleString()}
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Stake</div>
+            </div>
+            <div class="card" style="text-align:center;padding:var(--sp-md)">
+              <div style="font-size:22px;font-weight:900;color:var(--accent-gold)">
+                🪙 ${((m.stakeCoins||0)*2).toLocaleString()}
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Prize</div>
+            </div>
+          </div>
+          <div class="card mb-md">
+            <div class="flex items-center gap-md" style="justify-content:space-around">
+              <div style="text-align:center">
+                <div style="width:48px;height:48px;border-radius:50%;
+                  background:linear-gradient(135deg,var(--accent-green),var(--accent-blue));
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:18px;font-weight:900;color:#000;margin:0 auto 6px">
+                  ${(m.createdBy||'?')[0].toUpperCase()}
+                </div>
+                <div style="font-size:11px;color:var(--text-muted)">${(m.createdBy||'').slice(0,8)}...</div>
+                ${m.winnerId===m.createdBy?'<div style="color:var(--accent-gold);margin-top:2px">🏆</div>':''}
+              </div>
+              <div style="font-size:18px;font-weight:900;color:var(--text-muted)">VS</div>
+              <div style="text-align:center">
+                ${m.joinedBy ? `
+                  <div style="width:48px;height:48px;border-radius:50%;
+                    background:linear-gradient(135deg,var(--accent-red),#dc2626);
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:18px;font-weight:900;color:#fff;margin:0 auto 6px">
+                    ${m.joinedBy[0].toUpperCase()}
+                  </div>
+                  <div style="font-size:11px;color:var(--text-muted)">${m.joinedBy.slice(0,8)}...</div>
+                  ${m.winnerId===m.joinedBy?'<div style="color:var(--accent-gold);margin-top:2px">🏆</div>':''}
+                ` : `
+                  <div style="width:48px;height:48px;border-radius:50%;
+                    background:var(--bg-card2);border:2px dashed var(--border);
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:20px;margin:0 auto 6px">⏳</div>
+                  <div style="font-size:11px;color:var(--text-muted)">Sugaysa...</div>
+                `}
+              </div>
+            </div>
+          </div>
+          ${canJoin ? `
+            <button class="btn btn-primary" id="btn_join_from_matches"
+              data-id="${matchId}" data-stake="${m.stakeCoins}">
+              <span class="btn-text">🎮 Ku Biir — 🪙 ${(m.stakeCoins||0).toLocaleString()}</span>
+              <div class="btn-spinner"></div>
+            </button>` : ''}
+          ${m.status==='open' && currentUser.uid===m.createdBy ? `
+            <div class="card mt-sm" style="background:rgba(0,230,118,.05);
+              border-color:rgba(0,230,118,.2);text-align:center">
+              <p style="font-size:13px;color:var(--accent-green)">
+                ✅ Adaa abuuray — qof kale ayaa la sugayaa
+              </p>
+            </div>` : ''}
+          ${noFunds ? `
+            <div class="card mt-sm" style="border-color:rgba(239,68,68,.3);text-align:center">
+              <p class="text-red" style="font-size:13px;margin-bottom:8px">
+                💸 Lacag kuma filna
+              </p>
+              <a href="wallet.html" class="btn btn-gold btn-sm"
+                style="text-decoration:none;width:auto;margin:0 auto">+ Deposit</a>
+            </div>` : ''}`;
+
+        const joinBtn = content.querySelector('#btn_join_from_matches');
+        if (joinBtn) {
+          joinBtn.addEventListener('click', async () => {
+            await joinMatch(matchId, parseInt(joinBtn.dataset.stake));
+            // Refresh match detail after join
+            openMatchModalFull(matchId);
+          });
+        }
+      } catch (err) {
+        content.innerHTML = `<p class="text-muted p-md">Khalad: ${err.message}</p>`;
+      }
+    }
+
+    // ── Start real-time matches listener ────────────────
+    function startMatchesListener() {
+      if (matchesUnsub) matchesUnsub(); // previous listener jooji
+
+      const q = query(
+        collection(db, 'matches'),
+        orderBy('createdAt','desc'),
+        limit(50)
+      );
+
+      matchesUnsub = onSnapshot(q, snap => {
+        allMatchesData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        updateStats();
+        renderMatchesList();
+      }, err => {
+        const c = document.getElementById('matches-full-list');
+        if (c) c.innerHTML =
+          `<div class="empty-state"><div class="icon">❌</div>
+           <p>${err.message}</p></div>`;
+      });
+    }
+
+    // ── Event listeners ─────────────────────────────────
+
+    // Search
+    document.getElementById('matches-search')
+      ?.addEventListener('input', function() {
+        mSearch = this.value.toLowerCase().trim();
+        renderMatchesList();
+      });
+
+    // Sort
+    document.getElementById('sort-select')
+      ?.addEventListener('change', function() {
+        mSort = this.value;
+        renderMatchesList();
+      });
+
+    // Platform buttons
+    document.querySelectorAll('.platform-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.platform-btn').forEach(b => {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        mPlatform = btn.dataset.platform;
+        renderMatchesList();
+      });
+    });
+
+    // Status filter chips
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(c => {
+          c.classList.remove('active');
+          c.setAttribute('aria-selected','false');
+        });
+        chip.classList.add('active');
+        chip.setAttribute('aria-selected','true');
+        mFilter = chip.dataset.filter;
+        renderMatchesList();
+      });
+    });
+
+    // Summary card shortcuts (global — onclick attribute-ka)
+    window.matchesPageSetFilter = function(status) {
+      mFilter = status;
+      document.querySelectorAll('.filter-chip').forEach(c => {
+        const active = c.dataset.filter === status;
+        c.classList.toggle('active', active);
+        c.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      renderMatchesList();
+    };
+
+    // Modal overlay
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+      o.addEventListener('click', e => {
+        if (e.target === o) closeModal(o.id);
+      });
+    });
+
+    // ── Start! ──────────────────────────────────────────
+    startMatchesListener();
   }
+
 
 });
