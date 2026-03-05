@@ -1,0 +1,689 @@
+
+<!DOCTYPE html>
+<html lang="so" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="description" content="eMatch — Profile">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>eMatch — Profile</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <style>
+    .profile-cover {
+      height: 120px;
+      background: linear-gradient(135deg, #0d2137 0%, #1a0a2e 50%, #0f1b35 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-cover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(0,230,118,.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(59,130,246,.15) 0%, transparent 50%);
+    }
+    .profile-cover-pattern {
+      position: absolute;
+      inset: 0;
+      opacity: .06;
+      background-image: repeating-linear-gradient(
+        45deg,
+        var(--accent-green) 0px, var(--accent-green) 1px,
+        transparent 1px, transparent 20px
+      );
+    }
+    .profile-avatar-wrap {
+      position: relative;
+      margin-top: -44px;
+      margin-bottom: var(--sp-md);
+    }
+    .profile-avatar-lg {
+      width: 88px; height: 88px;
+      border-radius: var(--r-full);
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px; font-weight: 900; color: #000;
+      border: 4px solid var(--bg-base);
+      box-shadow: 0 8px 24px rgba(0,0,0,.5);
+      margin: 0 auto;
+      position: relative;
+    }
+    .online-dot {
+      position: absolute;
+      bottom: 4px; right: 4px;
+      width: 16px; height: 16px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      border: 3px solid var(--bg-base);
+    }
+    .profile-uid-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-full);
+      padding: 4px 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      transition: border-color var(--dur-fast) var(--ease);
+      margin-top: 6px;
+    }
+    .profile-uid-chip:active { border-color: var(--accent-green); }
+    .role-badge-owner        { background: rgba(255,215,0,.15);    color: var(--accent-gold);  border: 1px solid rgba(255,215,0,.3);  }
+    .role-badge-admin        { background: rgba(239,68,68,.12);    color: var(--accent-red);   border: 1px solid rgba(239,68,68,.25); }
+    .role-badge-user         { background: rgba(59,130,246,.12);   color: var(--accent-blue);  border: 1px solid rgba(59,130,246,.25);}
+    .role-badge-support      { background: rgba(0,230,118,.1);     color: var(--accent-green); border: 1px solid rgba(0,230,118,.25); }
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--r-full);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-top: 8px;
+    }
+    .edit-field {
+      background: var(--bg-card2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 12px var(--sp-md);
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--sp-sm);
+      transition: border-color var(--dur-fast) var(--ease);
+    }
+    .edit-field:focus-within { border-color: var(--accent-green); }
+    .edit-field-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .4px; }
+    .edit-field-value { font-size: 15px; font-weight: 500; color: var(--text-primary); }
+    .danger-zone {
+      border: 1px solid rgba(239,68,68,.25);
+      border-radius: var(--r-md);
+      padding: var(--sp-md);
+      background: rgba(239,68,68,.04);
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Offline Banner -->
+  <div id="offline-banner" class="offline-banner hidden" role="alert" aria-live="assertive">
+    📵 Internetka kuma xidna — ficilladaadu way ka xidantahay
+  </div>
+
+  <!-- ── Top Header ─────────────────────────────────────── -->
+  <header class="top-header">
+    <div class="logo">Profile</div>
+    <div class="header-actions">
+      <div class="coin-chip"
+        onclick="window.location.href='wallet.html'"
+        role="button" tabindex="0"
+        aria-label="Wallet fur">
+        🪙 <span class="coin-balance-display">—</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main Content ───────────────────────────────────── -->
+  <main class="page-content" role="main">
+
+    <!-- ── Cover + Avatar ───────────────────────────────── -->
+    <div class="profile-cover">
+      <div class="profile-cover-pattern"></div>
+    </div>
+
+    <div class="p-md">
+
+      <!-- Avatar + Name -->
+      <div class="text-center">
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar-lg" id="profile-avatar-display" aria-label="Profile avatar">
+            ?
+          </div>
+          <div class="online-dot" title="Online"></div>
+        </div>
+
+        <h1 id="profile-name-display" style="font-size:22px;margin-bottom:4px">—</h1>
+        <p id="profile-email-display" style="font-size:13px;margin-bottom:0">—</p>
+
+        <!-- Role Badge -->
+        <div id="profile-role-badge" class="role-badge role-badge-user">
+          👤 User
+        </div>
+
+        <!-- UID Chip (click to copy) -->
+        <div>
+          <div class="profile-uid-chip" id="profile-uid-chip"
+            onclick="copyUID()"
+            title="UID-ka koobiyaa"
+            aria-label="UID koobiyaa">
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span id="profile-uid-display">UID: loading...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Stats Grid ────────────────────────────────── -->
+      <div class="stat-grid mt-lg mb-md" role="region" aria-label="Profile statistics">
+        <div class="stat-cell">
+          <div class="stat-value text-green" id="stat-coins">—</div>
+          <div class="stat-label">🪙 Coins</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-value" id="stat-matches" style="color:var(--accent-blue)">—</div>
+          <div class="stat-label">🎮 Matches</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-value text-gold" id="stat-wins">—</div>
+          <div class="stat-label">🏆 Guul</div>
+        </div>
+      </div>
+
+      <!-- Escrow Row -->
+      <div class="card card-glass mb-md"
+        style="padding:var(--sp-sm) var(--sp-md)">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span style="font-size:13px;color:var(--text-muted)">Escrow (Match ku jira)</span>
+          </div>
+          <span style="font-size:15px;font-weight:800;color:var(--accent-gold)">
+            🪙 <span id="stat-escrow">—</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- ── Account Info ──────────────────────────────── -->
+      <div class="section-header" style="padding:0 0 var(--sp-sm)">
+        <h2>👤 Macluumaadka</h2>
+      </div>
+
+      <div class="mb-md">
+        <div class="edit-field">
+          <div>
+            <div class="edit-field-label">Magaca Buuxa</div>
+            <div class="edit-field-value" id="info-fullname">—</div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="color:var(--text-muted);flex-shrink:0">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+
+        <div class="edit-field">
+          <div>
+            <div class="edit-field-label">Email</div>
+            <div class="edit-field-value" id="info-email">—</div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="color:var(--text-muted);flex-shrink:0">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+
+        <div class="edit-field">
+          <div>
+            <div class="edit-field-label">Telefon</div>
+            <div class="edit-field-value" id="info-phone">—</div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="color:var(--text-muted);flex-shrink:0">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.35 2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+        </div>
+
+        <div class="edit-field">
+          <div>
+            <div class="edit-field-label">Xisaabta La Abuuray</div>
+            <div class="edit-field-value" id="info-createdat">—</div>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="color:var(--text-muted);flex-shrink:0">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8"  y1="2" x2="8"  y2="6"/>
+            <line x1="3"  y1="10" x2="21" y2="10"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- ── Edit Profile ──────────────────────────────── -->
+      <div class="section-header" style="padding:0 0 var(--sp-sm)">
+        <h2>✏️ Wax Ka Bedel</h2>
+      </div>
+
+      <form id="edit-profile-form" novalidate class="mb-md">
+        <div class="form-group">
+          <label for="edit_fullName">Magaca Cusub</label>
+          <div class="input-wrap">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            <input type="text" id="edit_fullName"
+              placeholder="Magacaaga cusub"
+              autocomplete="name"
+              aria-label="Magaca cusub"
+              aria-describedby="edit_fullName_err">
+          </div>
+          <div class="error-msg" id="edit_fullName_err" role="alert"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit_phone">Telefon Cusub</label>
+          <div class="input-wrap">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.35 2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <input type="tel" id="edit_phone"
+              placeholder="+252 61 234 5678"
+              inputmode="tel"
+              autocomplete="tel"
+              aria-label="Telefon cusub"
+              aria-describedby="edit_phone_err">
+          </div>
+          <div class="error-msg" id="edit_phone_err" role="alert"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btn_save_profile">
+          <span class="btn-text">💾 Xogta Keydi</span>
+          <div class="btn-spinner"></div>
+        </button>
+      </form>
+
+      <!-- ── Settings Menu ─────────────────────────────── -->
+      <div class="section-header" style="padding:0 0 var(--sp-sm)">
+        <h2>⚙️ Settings</h2>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;margin-bottom:var(--sp-md)">
+
+        <!-- Wallet -->
+        <div class="menu-item" onclick="window.location.href='wallet.html'"
+          role="button" tabindex="0" aria-label="Wallet fur">
+          <div class="menu-item-icon">💳</div>
+          <div class="menu-item-label">Wallet</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="color:var(--text-muted)">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+
+        <!-- Password Reset -->
+        <div class="menu-item" id="menu_reset_pw"
+          role="button" tabindex="0" aria-label="Password bedel">
+          <div class="menu-item-icon">🔑</div>
+          <div class="menu-item-label">Password Bedel</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="color:var(--text-muted)">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+
+        <!-- Notifications -->
+        <div class="menu-item"
+          role="button" tabindex="0" aria-label="Notifications">
+          <div class="menu-item-icon">🔔</div>
+          <div class="menu-item-label">Notifications</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="color:var(--text-muted)">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+
+        <!-- Share App -->
+        <div class="menu-item" id="menu_share"
+          role="button" tabindex="0" aria-label="App share">
+          <div class="menu-item-icon">📤</div>
+          <div class="menu-item-label">App Share Gare</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="color:var(--text-muted)">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+
+        <!-- About -->
+        <div class="menu-item" id="menu_about"
+          role="button" tabindex="0" aria-label="About eMatch">
+          <div class="menu-item-icon">ℹ️</div>
+          <div class="menu-item-label">eMatch Ku Saabsan</div>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="color:var(--text-muted)">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+
+      </div>
+
+      <!-- ── Admin Section ─────────────────────────────── -->
+      <div id="admin-menu-section" class="hidden admin-only mb-md">
+        <div class="section-header" style="padding:0 0 var(--sp-sm)">
+          <h2>⚙️ Admin Tools</h2>
+          <span class="admin-badge">ADMIN</span>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div class="menu-item"
+            onclick="window.location.href='dashboard.html'"
+            role="button" tabindex="0">
+            <div class="menu-item-icon">📊</div>
+            <div class="menu-item-label">Admin Dashboard</div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              style="color:var(--text-muted)">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+          <div class="menu-item" id="menu_admin_users"
+            role="button" tabindex="0">
+            <div class="menu-item-icon">👥</div>
+            <div class="menu-item-label">User Management</div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              style="color:var(--text-muted)">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Danger Zone ───────────────────────────────── -->
+      <div class="section-header" style="padding:0 0 var(--sp-sm)">
+        <h2 style="color:var(--accent-red)">⚠️ Danger Zone</h2>
+      </div>
+
+      <div class="danger-zone mb-md">
+        <button id="btn_logout"
+          class="btn btn-danger"
+          aria-label="Ka bax">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          <span class="btn-text">Ka Bax</span>
+          <div class="btn-spinner" style="border-top-color:#fff"></div>
+        </button>
+      </div>
+
+      <p class="text-center text-muted" style="font-size:11px;padding-bottom:var(--sp-lg)">
+        eMatch v1.0 · All rights reserved
+      </p>
+
+    </div>
+  </main>
+
+  <!-- ── Bottom Navigation ──────────────────────────────── -->
+  <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+    <a class="nav-item" data-page="dashboard.html" href="dashboard.html" aria-label="Home">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Home</span>
+      <span class="nav-tooltip" aria-hidden="true">Home</span>
+    </a>
+    <a class="nav-item" data-page="matches.html" href="matches.html" aria-label="Matches">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      <span>Matchs</span>
+      <span class="nav-tooltip" aria-hidden="true">Matches</span>
+    </a>
+    <a class="nav-item create-btn" href="dashboard.html"
+      onclick="localStorage.setItem('open_create','1')" aria-label="Match abuur">
+      <div class="nav-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>
+      <span style="color:var(--text-muted)">Abuur</span>
+      <span class="nav-tooltip" aria-hidden="true">Match Abuur</span>
+    </a>
+    <a class="nav-item" data-page="wallet.html" href="wallet.html" aria-label="Wallet">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 12V22H4V12"/>
+        <path d="M22 7H2v5h20V7z"/>
+        <path d="M12 22V7"/>
+        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+      </svg>
+      <span>Wallet</span>
+      <span class="nav-tooltip" aria-hidden="true">Wallet</span>
+    </a>
+    <a class="nav-item active" data-page="profile.html" href="profile.html"
+      aria-label="Profile" aria-current="page">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span>Profile</span>
+      <span class="nav-tooltip" aria-hidden="true">Profile</span>
+    </a>
+  </nav>
+
+</div>
+
+<!-- ════ MODALS ════════════════════════════════════════════ -->
+
+<!-- About Modal -->
+<div id="about-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="about-title">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="text-align:center;padding:var(--sp-md) 0 var(--sp-lg)">
+      <div style="font-size:56px;margin-bottom:var(--sp-md)">🎮</div>
+      <h2 id="about-title" style="margin-bottom:var(--sp-sm)">eMatch</h2>
+      <p style="margin-bottom:var(--sp-sm)">Version 1.0.0</p>
+      <p style="font-size:13px;margin-bottom:var(--sp-lg)">
+        Online gaming platform — ciyaar, tartam, coins guuleeso.
+        Firebase + Firestore powered.
+      </p>
+      <div class="card card-glass" style="text-align:left;margin-bottom:var(--sp-md)">
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+          <div>🔥 waxan usameynay appkan in leesku balansado ciyaaraha lacagna lasaarto </div>
+          <div>📦 waxan rabnaa in dhalin yarada eey bashaalan </div>
+          <div>💸 Mobile Money Integration</div>
+          <div>⚡ Real-time Match Updates</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost" onclick="closeModal('about-modal')">Xidh</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module" src="js/app.js"></script>
+
+<script type="module">
+  import { initializeApp }       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, sendPasswordResetEmail }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc, query,
+           collection, where, getDocs, onSnapshot, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ── Firebase config (app.js iyo halkan isla config) ──
+  // app.js already initialises Firebase — reuse same instance
+  // Halkan waxaan ku isticmaaleynaa getApp() haddii lagii baahdo
+  // Laakiin app.js module-ka ayaa export-ka maamula,
+  // markaas waxaan isticmaaleynaa global state-ka app.js ku kaydiyay.
+
+  // Profile page init
+  document.addEventListener('DOMContentLoaded', () => {
+
+    // Edit profile form
+    document.getElementById('edit-profile-form')
+      ?.addEventListener('submit', handleEditProfile);
+
+    // Menu items
+    document.getElementById('menu_reset_pw')
+      ?.addEventListener('click', handlePasswordResetFromProfile);
+
+    document.getElementById('menu_share')
+      ?.addEventListener('click', handleShare);
+
+    document.getElementById('menu_about')
+      ?.addEventListener('click', () => openModal('about-modal'));
+
+    // Modal overlay close
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+      o.addEventListener('click', e => {
+        if (e.target === o) closeModal(o.id);
+      });
+    });
+  });
+
+  async function handleEditProfile(e) {
+    e.preventDefault();
+    const newName  = document.getElementById('edit_fullName').value.trim();
+    const newPhone = document.getElementById('edit_phone').value.trim();
+    const btn      = document.getElementById('btn_save_profile');
+
+    // Clear errors
+    document.getElementById('edit_fullName_err').textContent = '';
+    document.getElementById('edit_phone_err').textContent    = '';
+
+    let valid = true;
+    if (newName && newName.length < 2) {
+      document.getElementById('edit_fullName_err').textContent = 'Magacu waa inuu ka badan yahay 1 xaraf';
+      valid = false;
+    }
+    if (newPhone && !/^[+]?[0-9]{9,15}$/.test(newPhone.replace(/\s/g,''))) {
+      document.getElementById('edit_phone_err').textContent = 'Lambarka sax ma ahan';
+      valid = false;
+    }
+    if (!valid) return;
+    if (!newName && !newPhone) {
+      showToast('Wax bedel ah geli', 'error'); return;
+    }
+    if (!navigator.onLine) { showToast('Internet laguma xidna', 'error'); return; }
+
+    btn.classList.add('loading'); btn.disabled = true;
+
+    // app.js waxay maamushaa currentUser — waxaan ka helaa window scope
+    const uid = window._ematch_uid;
+    if (!uid) { showToast('Dib u gal', 'error'); return; }
+
+    try {
+      const updates = {};
+      if (newName)  updates.fullName = newName;
+      if (newPhone) updates.phone    = newPhone;
+
+      // Firestore update (sensitive fields la ma bedelo)
+      const firebaseConfig = window._ematch_config;
+      const app = initializeApp(firebaseConfig, 'profile-app');
+      const db  = getFirestore(app);
+      await updateDoc(doc(db, 'users', uid), updates);
+
+      // UI update
+      if (newName) {
+        document.getElementById('profile-name-display').textContent  = newName;
+        document.getElementById('info-fullname').textContent          = newName;
+        document.getElementById('edit_fullName').value               = '';
+        const initials = newName.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+        document.getElementById('profile-avatar-display').textContent = initials;
+        document.querySelectorAll('.avatar').forEach(a => a.textContent = initials);
+      }
+      if (newPhone) {
+        document.getElementById('info-phone').textContent = newPhone;
+        document.getElementById('edit_phone').value       = '';
+      }
+
+      showToast('✅ Xogta waa la keydiyay!', 'success');
+    } catch (err) {
+      showToast('Khalad: ' + err.message, 'error');
+    } finally {
+      btn.classList.remove('loading'); btn.disabled = false;
+    }
+  }
+
+  async function handlePasswordResetFromProfile() {
+    const email = document.getElementById('profile-email-display')?.textContent;
+    if (!email || email === '—') { showToast('Email la ma helin', 'error'); return; }
+    if (!navigator.onLine) { showToast('Internet laguma xidna', 'error'); return; }
+    try {
+      const firebaseConfig = window._ematch_config;
+      const app  = initializeApp(firebaseConfig, 'profile-reset');
+      const auth = getAuth(app);
+      await sendPasswordResetEmail(auth, email);
+      showToast('✅ Password reset email la diray!', 'success');
+    } catch (err) {
+      showToast('Khalad: ' + err.message, 'error');
+    }
+  }
+
+  function handleShare() {
+    if (navigator.share) {
+      navigator.share({
+        title: 'eMatch — Gaming Platform',
+        text:  'Kaalay eMatch ku ciyaar, tartam, coins guuleeso! 🎮',
+        url:   window.location.origin
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.origin)
+        .then(() => showToast('✅ Link la koobiyay!', 'success'));
+    }
+  }
+
+  window.copyUID = function() {
+    const uid = window._ematch_uid;
+    if (uid) {
+      navigator.clipboard.writeText(uid)
+        .then(() => showToast('✅ UID la koobiyay!', 'success'))
+        .catch(() => showToast('Koobiyaynta waa fashilantay', 'error'));
+    }
+  };
+
+  function showToast(msg, type='info') {
+    const e = document.getElementById('toast');
+    if (e) e.remove();
+    const t = document.createElement('div');
+    t.id = 'toast';
+    Object.assign(t.style, {
+      position:'fixed', bottom:'90px', left:'50%',
+      transform:'translateX(-50%) translateY(20px)',
+      background: type==='error' ? 'var(--accent-red)' : type==='success' ? 'var(--accent-green)' : 'var(--bg-card2)',
+      color: type==='success' ? '#000' : '#fff',
+      padding:'10px 20px', borderRadius:'var(--r-full)',
+      fontSize:'14px', fontWeight:'600', zIndex:'900',
+      maxWidth:'360px', textAlign:'center',
+      transition:'all 240ms', border:'1px solid var(--glass-border)',
+      opacity:'0'
+    });
+    t.textContent = msg;
+    document.body.appendChild(t);
+    requestAnimationFrame(() => { t.style.transform='translateX(-50%) translateY(0)'; t.style.opacity='1'; });
+    setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3000);
+  }
+</script>
+</body>
+</html>

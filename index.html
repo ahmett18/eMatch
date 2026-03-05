@@ -1,129 +1,273 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="so" dir="ltr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eMatch - Login</title>
-    <!-- CSS Styles same as before -->
-    <style>
-        :root { --bg-primary: #0a0a0f; --bg-card: rgba(18, 18, 26, 0.85); --fg: #e6edf3; --fg-muted: #7d8590; --accent-gold: #ffd700; --border: rgba(255, 215, 0, 0.15); --danger: #ff4444; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Rajdhani', sans-serif; background: var(--bg-primary); color: var(--fg); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        #particles-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
-        .auth-container { position: relative; z-index: 10; width: 100%; max-width: 420px; padding: 20px; }
-        .glass-card { background: var(--bg-card); backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: 24px; padding: 32px 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); }
-        .logo { text-align: center; margin-bottom: 32px; }
-        .logo-text { font-family: 'Orbitron', monospace; font-size: 1.75rem; font-weight: 800; letter-spacing: 2px; }
-        .logo-text span { color: var(--accent-gold); }
-        .tabs { display: flex; background: rgba(0,0,0,0.3); border-radius: 16px; padding: 4px; margin-bottom: 24px; }
-        .tab { flex: 1; text-align: center; padding: 12px; font-family: 'Orbitron', monospace; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--fg-muted); cursor: pointer; border-radius: 12px; transition: all 0.3s ease; }
-        .tab.active { background: linear-gradient(135deg, var(--accent-gold), #b8860b); color: var(--bg-primary); }
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--fg-muted); margin-bottom: 8px; text-transform: uppercase; }
-        .form-input { width: 100%; padding: 14px 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; color: var(--fg); font-size: 1rem; font-family: 'Rajdhani', sans-serif; }
-        .form-input:focus { outline: none; border-color: var(--accent-gold); }
-        .btn-primary { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--accent-gold), #b8860b); color: var(--bg-primary); font-family: 'Orbitron', monospace; font-weight: 700; font-size: 0.875rem; text-transform: uppercase; border: none; border-radius: 12px; cursor: pointer; }
-        .message-box { padding: 12px; border-radius: 10px; font-size: 0.85rem; text-align: center; margin-top: 16px; display: none; }
-        .error { background: rgba(255,68,68,0.1); border: 1px solid var(--danger); color: #ff6b6b; display: block; }
-        .success { background: rgba(0,255,136,0.1); border: 1px solid #00ff88; color: #00ff88; display: block; }
-        .hidden { display: none !important; }
-    </style>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="description" content="eMatch — Ciyaar, Tartam, Guuleeso">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>eMatch — Gal</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
 </head>
 <body>
-    <canvas id="particles-canvas"></canvas>
-    <div class="auth-container">
-        <div class="glass-card">
-            <div class="logo">
-                <div class="logo-text">e<span>Match</span></div>
-                <div style="font-size:0.85rem;color:var(--fg-muted);letter-spacing:1px;">Competitive Gaming Arena</div>
-            </div>
+<div id="app">
 
-            <div class="tabs">
-                <div class="tab active" data-tab="login">Login</div>
-                <div class="tab" data-tab="signup">Sign Up</div>
-            </div>
+  <!-- Offline Banner -->
+  <div id="offline-banner" class="offline-banner hidden" role="alert" aria-live="assertive">
+    📵 Internetka kuma xidna — gal ka dib markii xiriirku soo laabto
+  </div>
 
-            <form id="loginForm">
-                <div class="form-group">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" name="email" class="form-input" placeholder="you@example.com" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn-primary">Login to Arena</button>
-                <div id="loginMsg" class="message-box error"></div>
-            </form>
+  <div class="auth-page">
 
-            <form id="signupForm" class="hidden">
-                <div class="form-group">
-                    <label class="form-label">Gamer Tag</label>
-                    <input type="text" name="displayName" class="form-input" placeholder="ProGamer_X">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" name="email" class="form-input" placeholder="you@example.com" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-input" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn-primary">Create Account</button>
-                <div id="signupMsg" class="message-box"></div>
-            </form>
-        </div>
+    <!-- ── Hero ──────────────────────────────────────────── -->
+    <div class="auth-hero">
+      <span class="auth-logo">eMatch</span>
+      <p class="auth-tagline">Ciyaar · Tartam · Guuleeso 🏆</p>
     </div>
 
-    <script>
-        const c = document.getElementById('particles-canvas'), ctx = c.getContext('2d'); let p = [];
-        function init() { c.width = innerWidth; c.height = innerHeight; p = []; for (let i = 0; i < 60; i++) p.push({ x: Math.random() * c.width, y: Math.random() * c.height, r: Math.random() * 1.5, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4, a: Math.random() * 0.5 + 0.2 }); }
-        function draw() { ctx.clearRect(0, 0, c.width, c.height); p.forEach(e => { e.x += e.vx; e.y += e.vy; if (e.x < 0) e.x = c.width; if (e.x > c.width) e.x = 0; if (e.y < 0) e.y = c.height; if (e.y > c.height) e.y = 0; ctx.beginPath(); ctx.arc(e.x, e.y, Math.max(1, e.r * 2), 0, Math.PI * 2); ctx.fillStyle = `rgba(255,215,0,${e.a})`; ctx.fill(); }); requestAnimationFrame(draw); }
-        window.addEventListener('resize', init); init(); draw();
-    </script>
+    <!-- ── Auth Card ─────────────────────────────────────── -->
+    <div class="auth-card">
 
-    <script type="module">
-        import { signUpWithEmail, signInWithEmail, onAuthChange } from "./js/auth.js";
+      <!-- Tab Bar -->
+      <div class="tab-bar" role="tablist">
+        <button class="tab-btn active" data-tab="login"
+          role="tab" aria-selected="true" aria-controls="tab-login">
+          Gal
+        </button>
+        <button class="tab-btn" data-tab="register"
+          role="tab" aria-selected="false" aria-controls="tab-register">
+          Qorso
+        </button>
+      </div>
 
-        const loginForm = document.getElementById('loginForm');
-        const signupForm = document.getElementById('signupForm');
-        const tabs = document.querySelectorAll('.tab');
-        
-        tabs.forEach(t => t.addEventListener('click', () => {
-            tabs.forEach(x => x.classList.remove('active')); t.classList.add('active');
-            const isLogin = t.dataset.tab === 'login';
-            loginForm.classList.toggle('hidden', !isLogin);
-            signupForm.classList.toggle('hidden', isLogin);
-            clearMsgs();
-        }));
+      <!-- ════ LOGIN TAB ════════════════════════════════════ -->
+      <div id="tab-login" class="tab-content" data-tab="login" role="tabpanel">
+        <form id="login-form" novalidate autocomplete="on">
 
-        function showMsg(el, msg, isErr) { el.textContent = msg; el.className = `message-box ${isErr ? 'error' : 'success'}`; }
-        function clearMsgs() { document.querySelectorAll('.message-box').forEach(m => m.className = 'message-box'); }
+          <!-- Email -->
+          <div class="form-group">
+            <label for="login_email">Email</label>
+            <div class="input-wrap">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input
+                type="email"
+                id="login_email"
+                name="email"
+                placeholder="magac@email.com"
+                autocomplete="email"
+                inputmode="email"
+                aria-label="Email-kaaga"
+                aria-describedby="login_email_err"
+                required>
+            </div>
+            <div class="error-msg" id="login_email_err" role="alert" aria-live="polite"></div>
+          </div>
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); clearMsgs();
-            const fd = new FormData(loginForm);
-            const res = await signInWithEmail(fd.get('email'), fd.get('password'));
-            if (res.success) window.location.href = 'user/index.html'; // REDIRECT TO USER FOLDER
-            else showMsg(document.getElementById('loginMsg'), res.error, true);
-        });
+          <!-- Password -->
+          <div class="form-group">
+            <label for="login_password">Password</label>
+            <div class="input-wrap">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input
+                type="password"
+                id="login_password"
+                name="password"
+                placeholder="Password-kaaga"
+                autocomplete="current-password"
+                aria-label="Password"
+                aria-describedby="login_password_err"
+                required>
+              <button type="button" class="pw-toggle" aria-label="Password muuji ama qari">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <div class="error-msg" id="login_password_err" role="alert" aria-live="polite"></div>
+          </div>
 
-        signupForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); clearMsgs();
-            const fd = new FormData(signupForm);
-            const res = await signUpWithEmail(fd.get('email'), fd.get('password'), fd.get('displayName'));
-            const msgEl = document.getElementById('signupMsg');
-            if (res.success) {
-                showMsg(msgEl, "Account created! Redirecting...", false);
-                setTimeout(() => window.location.href = 'user/index.html', 1000); // REDIRECT TO USER FOLDER
-            } else showMsg(msgEl, res.error, true);
-        });
+          <!-- Submit -->
+          <button type="submit" class="btn btn-primary" id="btn_login">
+            <span class="btn-text">Gal →</span>
+            <div class="btn-spinner"></div>
+          </button>
 
-        // Auto redirect if already logged in
-        onAuthChange(user => {
-            if(user) window.location.href = 'user/index.html'; 
-        });
-    </script>
+          <!-- Forgot Password -->
+          <button type="button" class="btn btn-ghost mt-sm" id="btn_forgot_pw">
+            🔑 Password-ka waan illoobay
+          </button>
+
+        </form>
+
+        <!-- Divider -->
+        <div class="social-divider">ama</div>
+
+        <!-- Google Sign In -->
+        <button class="btn btn-secondary" id="btn_google" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Google-ka ku Gal
+        </button>
+      </div>
+
+      <!-- ════ REGISTER TAB ══════════════════════════════════ -->
+      <div id="tab-register" class="tab-content hidden" data-tab="register" role="tabpanel">
+        <form id="register-form" novalidate autocomplete="on">
+
+          <!-- Full Name -->
+          <div class="form-group">
+            <label for="reg_fullName">Magaca Buuxa</label>
+            <div class="input-wrap">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <input
+                type="text"
+                id="reg_fullName"
+                name="fullName"
+                placeholder="Magacaaga oo dhan"
+                autocomplete="name"
+                aria-label="Magacaaga buuxa"
+                aria-describedby="reg_fullName_err"
+                required>
+            </div>
+            <div class="error-msg" id="reg_fullName_err" role="alert" aria-live="polite"></div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="reg_email">Email</label>
+            <div class="input-wrap">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input
+                type="email"
+                id="reg_email"
+                name="email"
+                placeholder="magac@email.com"
+                autocomplete="email"
+                inputmode="email"
+                aria-label="Email-kaaga"
+                aria-describedby="reg_email_err"
+                required>
+            </div>
+            <div class="error-msg" id="reg_email_err" role="alert" aria-live="polite"></div>
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group">
+            <label for="reg_phone">Telefon</label>
+            <div class="input-wrap">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.35 2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              <input
+                type="tel"
+                id="reg_phone"
+                name="phone"
+                placeholder="+252 61 234 5678"
+                autocomplete="tel"
+                inputmode="tel"
+                aria-label="Lambarka telefonka"
+                aria-describedby="reg_phone_err"
+                required>
+            </div>
+            <div class="error-msg" id="reg_phone_err" role="alert" aria-live="polite"></div>
+            <div class="field-hint">Tusaale: +252 61 234 5678</div>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="reg_password">Password</label>
+            <div class="input-wrap">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <input
+                type="password"
+                id="reg_password"
+                name="new-password"
+                placeholder="Ugu yaraan 8 xaraf"
+                autocomplete="new-password"
+                aria-label="Password cusub"
+                aria-describedby="reg_password_err"
+                required>
+              <button type="button" class="pw-toggle" aria-label="Password muuji ama qari">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+            <div class="error-msg" id="reg_password_err" role="alert" aria-live="polite"></div>
+            <div class="field-hint">Ugu yaraan 8 xaraf — awood leh isticmaal</div>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" class="btn btn-primary" id="btn_register">
+            <span class="btn-text">✦ Xisaab Abuur</span>
+            <div class="btn-spinner"></div>
+          </button>
+
+        </form>
+
+        <!-- Divider -->
+        <div class="social-divider">ama</div>
+
+        <!-- Google Register -->
+        <button class="btn btn-secondary" type="button"
+          onclick="document.getElementById('btn_google').click()">
+          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Google-ka ku Qorso
+        </button>
+      </div>
+
+    </div>
+    <!-- /auth-card -->
+
+    <p class="text-center text-muted mt-md" style="font-size:12px;padding-bottom:32px">
+      📱 eMatch v1.0 &nbsp;·&nbsp; Shuruucda oo dhami waxay daboolaan privacy-gaaga
+    </p>
+
+  </div>
+  <!-- /auth-page -->
+
+</div>
+<!-- /app -->
+
+<!-- Firebase SDK (ES Modules) -->
+<script type="module" src="js/app.js"></script>
+
 </body>
 </html>

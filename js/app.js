@@ -1,0 +1,1591 @@
+
+// ============================================================
+// eMatch — js/app.js  (Updated — v2.0)
+// Supports: index.html, dashboard.html, wallet.html,
+//           profile.html, matches.html
+// ============================================================
+// ⚠️  FIREBASE CONFIG: Ku dar config-gaaga hoos
+// ============================================================
+
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup,
+  browserLocalPersistence,
+  setPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc, getDoc, setDoc, updateDoc,
+  addDoc, collection,
+  serverTimestamp,
+  query, where, orderBy, limit,
+  getDocs, onSnapshot,
+  runTransaction
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ── 1. FIREBASE CONFIG ─────────────────────────────────────
+// 🔴 Halkan ku beddel config-gaaga Firebase-ka
+const firebaseConfig = {
+  apiKey: "AIzaSyAW921oL1KTEk5n75xWvfGWM4Ab1SKnpbg",
+  authDomain: "ematch-bb818.firebaseapp.com",
+  databaseURL: "https://ematch-bb818-default-rtdb.firebaseio.com",
+  projectId: "ematch-bb818",
+  storageBucket: "ematch-bb818.firebasestorage.app",
+  messagingSenderId: "955647946180",
+  appId: "1:955647946180:web:c66947044f0dd6f633c891"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// Session persistence
+setPersistence(auth, browserLocalPersistence);
+
+// ── 2. GLOBAL STATE ────────────────────────────────────────
+let currentUser     = null;
+let currentUserData = null;
+let isOnline        = navigator.onLine;
+
+// ── 3. EXPOSE GLOBALS (profile.html + matches.html need) ───
+window._ematch_config   = firebaseConfig;
+window._ematch_db       = db;
+window._ematch_uid      = null;
+window._ematch_userdata = null;
+
+// ── 4. UTILITIES ───────────────────────────────────────────
+
+function setLoading(btn, loading) {
+  if (!btn) return;
+  btn.classList.toggle('loading', loading);
+  btn.disabled = loading;
+}
+
+function showError(fieldId, msg) {
+  const field = document.getElementById(fieldId);
+  const errEl = document.getElementById(fieldId + '_err');
+  if (field) field.classList.add('input-error');
+  if (errEl) errEl.textContent = msg;
+}
+
+function clearErrors(formId) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  form.querySelectorAll('.input-error')
+      .forEach(el => el.classList.remove('input-error'));
+  form.querySelectorAll('.error-msg')
+      .forEach(el => el.textContent = '');
+}
+
+window.showToast = function(msg, type = 'info') {
+  const existing = document.getElementById('toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'toast';
+
+  const colors = {
+    error:   'var(--accent-red)',
+    success: 'var(--accent-green)',
+    info:    'var(--bg-card2)',
+    warning: 'var(--accent-gold)'
+  };
+
+  Object.assign(toast.style, {
+    position:    'fixed',
+    bottom:      '90px',
+    left:        '50%',
+    transform:   'translateX(-50%) translateY(20px)',
+    background:  colors[type] || colors.info,
+    color:       type === 'success' ? '#000' : '#fff',
+    padding:     '10px 20px',
+    borderRadius:'var(--r-full)',
+    fontSize:    '14px',
+    fontWeight:  '600',
+    zIndex:      '9999',
+    maxWidth:    '360px',
+    textAlign:   'center',
+    transition:  'all 240ms var(--ease)',
+    border:      '1px solid var(--glass-border)',
+    boxShadow:   '0 4px 20px rgba(0,0,0,.5)',
+    opacity:     '0',
+    pointerEvents:'none'
+  });
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.style.transform = 'translateX(-50%) translateY(0)';
+    toast.style.opacity   = '1';
+  });
+  setTimeout(() => {
+    toast.style.opacity   = '0';
+    toast.style.transform = 'translateX(-50%) translateY(10px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 3200);
+};
+
+window.openModal = function(modalId) {
+  const overlay = document.getElementById(modalId);
+  if (!overlay) return;
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  history.pushState({ modal: modalId }, '');
+  const focusable = overlay.querySelector('input, button, select');
+  if (focusable) setTimeout(() => focusable.focus(), 250);
+};
+
+window.closeModal = function(modalId) {
+  const overlay = document.getElementById(modalId);
+  if (!overlay) return;
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+};
+
+window.handleLogout = handleLogout;
+
+function requireOnline() {
+  if (!isOnline) {
+    showToast('Xiriirka internetka kuma jirto. Isku day markale.', 'error');
+    return false;
+  }
+  return true;
+}
+
+const validateEmail    = e  => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+const validatePhone    = p  => /^[+]?[0-9]{9,15}$/.test(p.replace(/\s/g, ''));
+const validatePassword = pw => pw.length >= 8;
+
+// ── 5. OFFLINE DETECTION ───────────────────────────────────
+function updateOnlineStatus() {
+  isOnline = navigator.onLine;
+  const banner = document.getElementById('offline-banner');
+  if (banner) banner.classList.toggle('hidden', isOnline);
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// ── 6. BOTTOM NAVIGATION ───────────────────────────────────
+function initNavigation() {
+  const page = window.location.pathname.split('/').pop() || 'dashboard.html';
+
+  document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+    if (item.dataset.page === page) item.classList.add('active');
+
+    let pressTimer;
+    const tooltip = item.querySelector('.nav-tooltip');
+
+    item.addEventListener('pointerdown', () => {
+      pressTimer = setTimeout(() => {
+        if (tooltip) tooltip.classList.add('visible');
+      }, 500);
+    });
+    item.addEventListener('pointerup', () => {
+      clearTimeout(pressTimer);
+      if (tooltip) setTimeout(() => tooltip.classList.remove('visible'), 900);
+    });
+    item.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+  });
+
+  // Modal xidh markii browser back la dhufo
+  window.addEventListener('popstate', () => {
+    const openModalEl = document.querySelector('.modal-overlay.open');
+    if (openModalEl) {
+      closeModal(openModalEl.id);
+      history.pushState(null, '', window.location.href);
+    }
+  });
+}
+
+// ── 7. AUTH GUARD ──────────────────────────────────────────
+function authGuard(requireAuth, redirectTo = 'dashboard.html') {
+  return new Promise(resolve => {
+    const unsub = onAuthStateChanged(auth, async user => {
+      unsub();
+      if (requireAuth && !user) {
+        window.location.replace('index.html');
+      } else if (!requireAuth && user) {
+        window.location.replace(redirectTo);
+      } else if (user) {
+        currentUser = user;
+        await loadUserData(user.uid);
+        resolve(user);
+      } else {
+        resolve(null);
+      }
+    });
+  });
+}
+
+// ── 8. LOAD USER DATA ──────────────────────────────────────
+async function loadUserData(uid) {
+  try {
+    const userRef = doc(db, 'users', uid);
+    const snap    = await getDoc(userRef);
+
+    if (snap.exists()) {
+      currentUserData = snap.data();
+    } else {
+      const user      = auth.currentUser;
+      currentUserData = {
+        uid,
+        fullName:      user?.displayName || 'User',
+        email:         user?.email       || '',
+        phone:         '',
+        role:          'user',
+        coinBalance:   0,
+        escrowBalance: 0,
+        createdAt:     serverTimestamp()
+      };
+      await setDoc(userRef, currentUserData);
+    }
+
+    // Expose globals for other modules
+    window._ematch_uid      = uid;
+    window._ematch_userdata = currentUserData;
+
+    updateHeaderUI();
+
+    // Cache offline
+    try {
+      localStorage.setItem('ematch_user_cache', JSON.stringify({
+        ...currentUserData,
+        createdAt: currentUserData.createdAt?.toDate?.()?.toISOString() || null
+      }));
+    } catch (_) {}
+
+    return currentUserData;
+  } catch (err) {
+    console.error('loadUserData:', err);
+    const cached = localStorage.getItem('ematch_user_cache');
+    if (cached) {
+      currentUserData = JSON.parse(cached);
+      window._ematch_uid      = currentUserData.uid;
+      window._ematch_userdata = currentUserData;
+    }
+  }
+}
+
+// ── 9. UPDATE HEADER UI ────────────────────────────────────
+function updateHeaderUI() {
+  if (!currentUserData) return;
+
+  const initials = (currentUserData.fullName || 'U')
+    .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+  document.querySelectorAll('.avatar')
+    .forEach(a => { a.textContent = initials; });
+
+  document.querySelectorAll('.coin-balance-display')
+    .forEach(c => {
+      c.textContent = (currentUserData.coinBalance || 0).toLocaleString();
+    });
+
+  // Admin-only elements
+  const adminRoles = ['administrator', 'owner', 'partner_manager'];
+  if (adminRoles.includes(currentUserData.role)) {
+    document.querySelectorAll('.admin-only')
+      .forEach(el => el.classList.remove('hidden'));
+    const adminPanel = document.getElementById('admin-panel');
+    if (adminPanel) adminPanel.classList.remove('hidden');
+  }
+}
+
+// ── 10. SIGNUP ─────────────────────────────────────────────
+async function handleSignup(e) {
+  e.preventDefault();
+  if (!requireOnline()) return;
+
+  const fullName = document.getElementById('reg_fullName').value.trim();
+  const email    = document.getElementById('reg_email').value.trim();
+  const phone    = document.getElementById('reg_phone').value.trim();
+  const password = document.getElementById('reg_password').value;
+  const btn      = document.getElementById('btn_register');
+
+  clearErrors('register-form');
+
+  let valid = true;
+  if (!fullName || fullName.length < 2)
+    { showError('reg_fullName', 'Magaca oo buuxa geli'); valid = false; }
+  if (!validateEmail(email))
+    { showError('reg_email', 'Email-ka sax ma ahan'); valid = false; }
+  if (!validatePhone(phone))
+    { showError('reg_phone', 'Lambarka sax geli (+252...)'); valid = false; }
+  if (!validatePassword(password))
+    { showError('reg_password', 'Password-ku waa inuu ka badan yahay 8 xaraf'); valid = false; }
+  if (!valid) return;
+
+  setLoading(btn, true);
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      uid:           cred.user.uid,
+      fullName,
+      email,
+      phone,
+      role:          'user',
+      coinBalance:   0,
+      escrowBalance: 0,
+      createdAt:     serverTimestamp()
+    });
+    window.location.replace('dashboard.html');
+  } catch (err) {
+    setLoading(btn, false);
+    const errorMap = {
+      'auth/email-already-in-use': ['reg_email',    'Email-kani horey loo isticmaalay'],
+      'auth/weak-password':        ['reg_password',  'Password-ku aad ayuu u liita'],
+      'auth/invalid-email':        ['reg_email',    'Email-ka foomka sax ma ahan']
+    };
+    const mapped = errorMap[err.code];
+    if (mapped) showError(mapped[0], mapped[1]);
+    else showToast('Khalad: ' + err.message, 'error');
+  }
+}
+
+// ── 11. LOGIN ──────────────────────────────────────────────
+async function handleLogin(e) {
+  e.preventDefault();
+  if (!requireOnline()) return;
+
+  const email    = document.getElementById('login_email').value.trim();
+  const password = document.getElementById('login_password').value;
+  const btn      = document.getElementById('btn_login');
+
+  clearErrors('login-form');
+  if (!validateEmail(email)) { showError('login_email',    'Email-ka sax ma ahan'); return; }
+  if (!password)             { showError('login_password', 'Password-ka geli');     return; }
+
+  setLoading(btn, true);
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    // onAuthStateChanged handles redirect
+  } catch (err) {
+    setLoading(btn, false);
+    const badCreds = [
+      'auth/invalid-credential',
+      'auth/user-not-found',
+      'auth/wrong-password',
+      'auth/invalid-email'
+    ];
+    if (badCreds.includes(err.code))
+      showToast('Email ama password-ku khaldan yahay', 'error');
+    else
+      showToast('Khalad: ' + err.message, 'error');
+  }
+}
+
+// ── 12. GOOGLE SIGN-IN ─────────────────────────────────────
+async function handleGoogleSignIn() {
+  if (!requireOnline()) return;
+  const provider = new GoogleAuthProvider();
+  try {
+    const cred    = await signInWithPopup(auth, provider);
+    const uid     = cred.user.uid;
+    const userRef = doc(db, 'users', uid);
+    const snap    = await getDoc(userRef);
+
+    if (!snap.exists()) {
+      await setDoc(userRef, {
+        uid,
+        fullName:      cred.user.displayName || '',
+        email:         cred.user.email       || '',
+        phone:         '',
+        role:          'user',
+        coinBalance:   0,
+        escrowBalance: 0,
+        createdAt:     serverTimestamp()
+      });
+    }
+    window.location.replace('dashboard.html');
+  } catch (err) {
+    if (err.code !== 'auth/popup-closed-by-user')
+      showToast('Google sign-in khalad: ' + err.message, 'error');
+  }
+}
+
+// ── 13. PASSWORD RESET ─────────────────────────────────────
+window.handlePasswordReset = async function() {
+  const emailInput = document.getElementById('login_email');
+  const email      = emailInput?.value.trim() || prompt('Email-kaaga geli:');
+  if (!email || !validateEmail(email)) {
+    showToast('Email sax ah geli', 'error'); return;
+  }
+  if (!requireOnline()) return;
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showToast('✅ Email dib-u-dejinta password-ka la diray', 'success');
+  } catch (err) {
+    showToast('Khalad: ' + err.message, 'error');
+  }
+};
+
+// ── 14. LOGOUT ─────────────────────────────────────────────
+async function handleLogout() {
+  try {
+    await signOut(auth);
+    localStorage.removeItem('ematch_user_cache');
+    window.location.replace('index.html');
+  } catch (err) {
+    showToast('Khalad: ' + err.message, 'error');
+  }
+}
+
+// ── 15. PASSWORD TOGGLE ────────────────────────────────────
+function initPasswordToggles() {
+  document.querySelectorAll('.pw-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const wrap  = btn.closest('.input-wrap');
+      const input = wrap?.querySelector('input[type="password"], input[type="text"]');
+      if (!input) return;
+      const hidden   = input.type === 'password';
+      input.type     = hidden ? 'text' : 'password';
+      btn.innerHTML  = hidden
+        ? `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8
+              a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4
+              c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07
+              a3 3 0 1 1-4.24-4.24"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+           </svg>`
+        : `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+           </svg>`;
+    });
+  });
+}
+
+// ── 16. LOAD MATCHES LIST ──────────────────────────────────
+function loadMatches(container, filter = 'all') {
+  if (!container) return;
+
+  container.innerHTML = Array(3).fill(`
+    <div class="card mb-md">
+      <div class="skeleton sk-block mb-md"></div>
+      <div class="skeleton sk-line" style="width:60%"></div>
+      <div class="skeleton sk-line" style="width:80%"></div>
+    </div>`).join('');
+
+  let q = filter === 'all'
+    ? query(collection(db, 'matches'), orderBy('createdAt','desc'), limit(25))
+    : query(
+        collection(db, 'matches'),
+        where('status', '==', filter),
+        orderBy('createdAt','desc'),
+        limit(25)
+      );
+
+  const unsub = onSnapshot(q, snap => {
+    if (snap.empty) {
+      container.innerHTML = `
+        <div class="empty-state" style="min-height:200px">
+          <div style="font-size:48px;margin-bottom:16px">🎮</div>
+          <h3>Match la'aan</h3>
+          <p>Hadda wax match ah ma jiro. Abuur mid cusub!</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = snap.docs
+      .map(d => renderMatchCard(d.id, d.data()))
+      .join('');
+
+    container.querySelectorAll('.match-card').forEach(card => {
+      card.addEventListener('click', () => openMatchModal(card.dataset.id));
+    });
+  }, err => {
+    container.innerHTML =
+      `<p class="text-center p-md text-muted">Khalad: ${err.message}</p>`;
+  });
+
+  return unsub;
+}
+
+// ── 17. RENDER MATCH CARD ──────────────────────────────────
+function renderMatchCard(id, m) {
+  const emojiMap = {
+    'FIFA':'⚽','FC Mobile':'⚽','eFootball':'⚽',
+    'NBA 2K':'🏀','PUBG':'🔫','Free Fire':'🔫','COD':'🔫'
+  };
+  const emoji  = emojiMap[m.platform] || '🎮';
+  const isLive = m.status === 'locked';
+
+  return `
+    <div class="match-card" data-id="${id}" role="listitem" tabindex="0"
+      aria-label="${m.platform} match, stake: ${m.stakeCoins} coins">
+      <div class="match-card-banner">
+        <span>${emoji}</span>
+        ${isLive ? '<div class="live-badge">LIVE</div>' : ''}
+      </div>
+      <div class="match-card-body">
+        <div class="match-meta">
+          <span class="match-platform-tag">${m.platform || 'Unknown'}</span>
+          <span class="status-pill ${m.status || 'open'}">${
+            m.status === 'open'   ? 'Furan'      :
+            m.status === 'locked' ? 'Socda'      :
+            m.status === 'done'   ? 'Dhammaaday' : m.status
+          }</span>
+        </div>
+        <h3>${m.title || m.platform + ' Match'}</h3>
+        <div class="match-footer">
+          <div class="stake-amount">🪙 ${(m.stakeCoins||0).toLocaleString()}</div>
+          <span class="players-joined">
+            ${m.joinedBy ? '2/2 ▶ Socda' : '1/2 ⏳ Sugaysa'}
+          </span>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── 18. OPEN MATCH MODAL ───────────────────────────────────
+async function openMatchModal(matchId) {
+  openModal('match-modal');
+  const content = document.getElementById('match-modal-content');
+  if (!content) return;
+
+  content.innerHTML = `
+    <div class="modal-handle"></div>
+    <div class="skeleton sk-block mb-md"></div>
+    <div class="skeleton sk-line" style="width:70%"></div>
+    <div class="skeleton sk-line" style="width:50%"></div>`;
+
+  try {
+    const snap = await getDoc(doc(db, 'matches', matchId));
+    if (!snap.exists()) {
+      content.innerHTML = '<p class="text-muted p-md">Match la ma helin</p>';
+      return;
+    }
+
+    const m       = snap.data();
+    const bal     = currentUserData?.coinBalance || 0;
+    const canJoin = m.status === 'open'
+                 && currentUser?.uid !== m.createdBy
+                 && !m.joinedBy
+                 && bal >= (m.stakeCoins || 0);
+    const noFunds = m.status === 'open'
+                 && currentUser?.uid !== m.createdBy
+                 && !m.joinedBy
+                 && bal < (m.stakeCoins || 0);
+
+    content.innerHTML = `
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h2>🎮 ${m.title || m.platform + ' Match'}</h2>
+        <button class="modal-close" onclick="closeModal('match-modal')"
+          aria-label="Xidh">✕</button>
+      </div>
+      <div class="match-meta mb-md">
+        <span class="match-platform-tag">${m.platform}</span>
+        <span class="status-pill ${m.status}">${
+          m.status === 'open'   ? 'Furan'      :
+          m.status === 'locked' ? '🔴 LIVE'    : 'Dhammaaday'
+        }</span>
+      </div>
+
+      <div class="grid-2 mb-md">
+        <div class="card" style="text-align:center;padding:var(--sp-md)">
+          <div style="font-size:22px;font-weight:900;color:var(--accent-green)">
+            🪙 ${(m.stakeCoins||0).toLocaleString()}
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Stake</div>
+        </div>
+        <div class="card" style="text-align:center;padding:var(--sp-md)">
+          <div style="font-size:22px;font-weight:900;color:var(--accent-gold)">
+            🪙 ${((m.stakeCoins||0)*2).toLocaleString()}
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Prize</div>
+        </div>
+      </div>
+
+      <!-- Players -->
+      <div class="card mb-md">
+        <div class="flex items-center gap-md" style="justify-content:space-around">
+          <div style="text-align:center">
+            <div style="width:48px;height:48px;border-radius:50%;
+              background:linear-gradient(135deg,var(--accent-green),var(--accent-blue));
+              display:flex;align-items:center;justify-content:center;
+              font-size:18px;font-weight:900;color:#000;margin:0 auto 6px">
+              ${(m.createdBy||'?')[0].toUpperCase()}
+            </div>
+            <div style="font-size:11px;color:var(--text-muted)">
+              ${(m.createdBy||'').slice(0,8)}...
+            </div>
+            ${m.winnerId===m.createdBy ? '<div style="color:var(--accent-gold)">🏆</div>' : ''}
+          </div>
+          <div style="font-size:18px;font-weight:900;color:var(--text-muted)">VS</div>
+          <div style="text-align:center">
+            ${m.joinedBy ? `
+              <div style="width:48px;height:48px;border-radius:50%;
+                background:linear-gradient(135deg,var(--accent-red),#dc2626);
+                display:flex;align-items:center;justify-content:center;
+                font-size:18px;font-weight:900;color:#fff;margin:0 auto 6px">
+                ${m.joinedBy[0].toUpperCase()}
+              </div>
+              <div style="font-size:11px;color:var(--text-muted)">
+                ${m.joinedBy.slice(0,8)}...
+              </div>
+              ${m.winnerId===m.joinedBy ? '<div style="color:var(--accent-gold)">🏆</div>' : ''}
+            ` : `
+              <div style="width:48px;height:48px;border-radius:50%;
+                background:var(--bg-card2);border:2px dashed var(--border);
+                display:flex;align-items:center;justify-content:center;
+                font-size:20px;margin:0 auto 6px">⏳</div>
+              <div style="font-size:11px;color:var(--text-muted)">Sugaysa...</div>
+            `}
+          </div>
+        </div>
+      </div>
+
+      ${canJoin ? `
+        <button class="btn btn-primary mt-sm" id="btn_join_match"
+          data-id="${matchId}" data-stake="${m.stakeCoins}">
+          <span class="btn-text">🎮 Ku Biir — 🪙 ${(m.stakeCoins||0).toLocaleString()}</span>
+          <div class="btn-spinner"></div>
+        </button>` : ''}
+
+      ${m.status==='open' && currentUser?.uid===m.createdBy ? `
+        <div class="card mt-sm" style="background:rgba(0,230,118,.05);
+          border-color:rgba(0,230,118,.2);text-align:center">
+          <p style="font-size:13px;color:var(--accent-green)">
+            ✅ Adaa abuuray — qof kale ayaa la sugayaa
+          </p>
+        </div>` : ''}
+
+      ${noFunds ? `
+        <div class="card mt-sm"
+          style="border-color:rgba(239,68,68,.3);text-align:center">
+          <p class="text-red" style="font-size:13px;margin-bottom:8px">
+            💸 Lacag kuma filna. Wallet-kaaga ku shub.
+          </p>
+          <a href="wallet.html" class="btn btn-gold btn-sm"
+            style="text-decoration:none;width:auto;margin:0 auto">
+            + Deposit
+          </a>
+        </div>` : ''}`;
+
+    const joinBtn = content.querySelector('#btn_join_match');
+    if (joinBtn) {
+      joinBtn.addEventListener('click', () =>
+        joinMatch(matchId, parseInt(joinBtn.dataset.stake)));
+    }
+  } catch (err) {
+    content.innerHTML =
+      `<p class="text-muted p-md">Khalad: ${err.message}</p>`;
+  }
+}
+
+// ── 19. JOIN MATCH (Firestore Transaction) ─────────────────
+async function joinMatch(matchId, stakeCoins) {
+  if (!requireOnline() || !currentUser) return;
+
+  const btn = document.getElementById('btn_join_match')
+           || document.getElementById('btn_join_from_matches');
+  if (btn) setLoading(btn, true);
+
+  try {
+    await runTransaction(db, async tx => {
+      const matchRef  = doc(db, 'matches', matchId);
+      const userRef   = doc(db, 'users',   currentUser.uid);
+      const [mSnap, uSnap] = await Promise.all([
+        tx.get(matchRef), tx.get(userRef)
+      ]);
+
+      if (!mSnap.exists()) throw new Error('Match la ma helin');
+
+      const match = mSnap.data();
+      const user  = uSnap.data();
+
+      if (match.status !== 'open')            throw new Error('Match-ku xidhmay — qof kale ayaa ku biiri jiray');
+      if (match.joinedBy)                      throw new Error('Match-ku buuxay');
+      if (match.createdBy === currentUser.uid) throw new Error('Adigu abuuray match-kan');
+      if ((user.coinBalance||0) < stakeCoins)  throw new Error('Lacag kuma filna');
+
+      const creatorRef  = doc(db, 'users', match.createdBy);
+      const creatorSnap = await tx.get(creatorRef);
+      const creator     = creatorSnap.data() || {};
+
+      tx.update(matchRef, {
+        joinedBy: currentUser.uid,
+        status:   'locked',
+        lockedAt: serverTimestamp()
+      });
+
+      tx.update(userRef, {
+        coinBalance:   (user.coinBalance   || 0) - stakeCoins,
+        escrowBalance: (user.escrowBalance || 0) + stakeCoins
+      });
+
+      if ((creator.coinBalance || 0) >= stakeCoins) {
+        tx.update(creatorRef, {
+          coinBalance:   (creator.coinBalance   || 0) - stakeCoins,
+          escrowBalance: (creator.escrowBalance || 0) + stakeCoins
+        });
+      }
+
+      const txRef = doc(collection(db, 'transactions'));
+      tx.set(txRef, {
+        userId:       currentUser.uid,
+        type:         'escrow_lock',
+        coins:        -stakeCoins,
+        relatedMatch: matchId,
+        createdAt:    serverTimestamp(),
+        meta:         { action: 'join', matchId }
+      });
+    });
+
+    await loadUserData(currentUser.uid);
+    closeModal('match-modal');
+    showToast('✅ Match ku biirtay! Ciyaar fiican 🎮', 'success');
+  } catch (err) {
+    if (btn) setLoading(btn, false);
+    showToast(err.message, 'error');
+  }
+}
+
+// Expose for matches.html
+window.joinMatchGlobal = joinMatch;
+
+// ── 20. CREATE MATCH (Firestore Transaction) ───────────────
+async function handleCreateMatch(e) {
+  e.preventDefault();
+  if (!requireOnline() || !currentUser) return;
+
+  const platform   = document.getElementById('cm_platform')?.value;
+  const stakeCoins = parseInt(document.getElementById('cm_stake')?.value) || 0;
+  const title      = document.getElementById('cm_title')?.value.trim() || '';
+  const btn        = document.getElementById('btn_create_match');
+
+  clearErrors('create-match-form');
+  let valid = true;
+  if (!platform)
+    { showError('cm_platform', 'Platform dooro'); valid = false; }
+  if (stakeCoins < 10)
+    { showError('cm_stake', 'Ugu yaraan 10 coin'); valid = false; }
+  if ((currentUserData?.coinBalance || 0) < stakeCoins)
+    { showError('cm_stake', 'Lacag kuma filna'); valid = false; }
+  if (!valid) return;
+
+  setLoading(btn, true);
+  try {
+    await runTransaction(db, async tx => {
+      const userRef  = doc(db, 'users', currentUser.uid);
+      const userSnap = await tx.get(userRef);
+      const user     = userSnap.data();
+
+      if ((user.coinBalance || 0) < stakeCoins) throw new Error('Lacag kuma filna');
+
+      const matchRef = doc(collection(db, 'matches'));
+      const matchId  = matchRef.id;
+
+      tx.set(matchRef, {
+        id:          matchId,
+        title:       title || platform + ' Match',
+        platform,
+        stakeCoins,
+        createdBy:   currentUser.uid,
+        joinedBy:    null,
+        status:      'open',
+        winnerId:    null,
+        createdAt:   serverTimestamp(),
+        completedAt: null,
+        lockedAt:    null
+      });
+
+      tx.update(userRef, {
+        coinBalance:   (user.coinBalance   || 0) - stakeCoins,
+        escrowBalance: (user.escrowBalance || 0) + stakeCoins
+      });
+
+      const txRef = doc(collection(db, 'transactions'));
+      tx.set(txRef, {
+        userId:       currentUser.uid,
+        type:         'escrow_lock',
+        coins:        -stakeCoins,
+        relatedMatch: matchId,
+        createdAt:    serverTimestamp(),
+        meta:         { action: 'create', matchId }
+      });
+    });
+
+    await loadUserData(currentUser.uid);
+    closeModal('create-match-modal');
+    showToast('✅ Match la abuuray! 🎮', 'success');
+    if (document.getElementById('cm_platform')) document.getElementById('cm_platform').value = '';
+    if (document.getElementById('cm_stake'))    document.getElementById('cm_stake').value    = '';
+    if (document.getElementById('cm_title'))    document.getElementById('cm_title').value    = '';
+  } catch (err) {
+    setLoading(btn, false);
+    showToast(err.message, 'error');
+  }
+}
+
+// ── 21. DEPOSIT REQUEST ────────────────────────────────────
+async function handleDeposit(e) {
+  e.preventDefault();
+  if (!requireOnline() || !currentUser) return;
+
+  const amount   = parseFloat(document.getElementById('dep_amount')?.value)   || 0;
+  const phone    = document.getElementById('dep_phone')?.value.trim()         || '';
+  const provider = document.getElementById('dep_provider')?.value             || '';
+  const btn      = document.getElementById('btn_deposit');
+
+  clearErrors('deposit-form');
+  let valid = true;
+  if (amount < 1 || amount > 1000)  { showError('dep_amount',   'Qadarka $1–$1000'); valid = false; }
+  if (!validatePhone(phone))         { showError('dep_phone',    'Lambarka sax geli'); valid = false; }
+  if (!provider)                     { showError('dep_provider', 'Provider dooro');    valid = false; }
+  if (!valid) return;
+
+  const coinsAmount = Math.floor(amount / 0.10);
+  const cleanPhone  = phone.replace('+', '').replace(/\s/g, '');
+  const amtMillis   = Math.round(amount * 1000);
+
+  const ussdMap = {
+    Hormuud: `*712*${cleanPhone}*${amtMillis}#`,
+    Somnet:  `*888*1*${cleanPhone}*${amtMillis}#`,
+    Somtel:  `*668*${cleanPhone}*${amtMillis}#`
+  };
+  const ussdCode = ussdMap[provider] || `*000*${cleanPhone}*${amtMillis}#`;
+
+  setLoading(btn, true);
+  try {
+    await addDoc(collection(db, 'deposit_requests'), {
+      userId:        currentUser.uid,
+      amountUSD:     amount,
+      coinsAmount,
+      phoneSentFrom: phone,
+      company:       provider,
+      ussdCode,
+      status:        'pending',
+      createdAt:     serverTimestamp(),
+      reviewedBy:    null,
+      reviewedAt:    null
+    });
+
+    setLoading(btn, false);
+
+    const ussdEl     = document.getElementById('ussd-code-display');
+    const ussdAmount = document.getElementById('ussd-amount-display');
+    if (ussdEl)     ussdEl.textContent     = ussdCode;
+    if (ussdAmount) ussdAmount.textContent = `$${amount} → 🪙 ${coinsAmount.toLocaleString()} coins`;
+
+    closeModal('deposit-modal');
+    setTimeout(() => openModal('ussd-modal'), 200);
+  } catch (err) {
+    setLoading(btn, false);
+    showToast('Khalad: ' + err.message, 'error');
+  }
+}
+
+// ── 22. SEND COINS (Firestore Transaction) ─────────────────
+async function handleSendCoins(e) {
+  e.preventDefault();
+  if (!requireOnline() || !currentUser) return;
+
+  const recipientId = document.getElementById('send_recipient')?.value.trim() || '';
+  const sendAmount  = parseInt(document.getElementById('send_amount')?.value)  || 0;
+  const btn         = document.getElementById('btn_send_coins');
+
+  clearErrors('send-coins-form');
+  let valid = true;
+  if (!recipientId)
+    { showError('send_recipient', 'UID-ka geli'); valid = false; }
+  if (recipientId === currentUser.uid)
+    { showError('send_recipient', 'Adiga nafta kuu diri kartid'); valid = false; }
+  if (sendAmount < 1)
+    { showError('send_amount', 'Tiro sax ah geli'); valid = false; }
+  if (sendAmount > (currentUserData?.coinBalance || 0))
+    { showError('send_amount', 'Lacag kuma filna'); valid = false; }
+  if (!valid) return;
+
+  setLoading(btn, true);
+  try {
+    await runTransaction(db, async tx => {
+      const senderRef    = doc(db, 'users', currentUser.uid);
+      const recipientRef = doc(db, 'users', recipientId);
+      const [sSnap, rSnap] = await Promise.all([
+        tx.get(senderRef), tx.get(recipientRef)
+      ]);
+
+      if (!rSnap.exists()) throw new Error('Isticmaalaha la ma helin');
+      const sender = sSnap.data();
+      if ((sender.coinBalance || 0) < sendAmount) throw new Error('Lacag kuma filna');
+
+      tx.update(senderRef,    { coinBalance: (sender.coinBalance||0) - sendAmount });
+      tx.update(recipientRef, { coinBalance: (rSnap.data().coinBalance||0) + sendAmount });
+
+      const t1 = doc(collection(db, 'transactions'));
+      tx.set(t1, {
+        userId: currentUser.uid, type:'send',
+        coins: -sendAmount, relatedMatch: null,
+        createdAt: serverTimestamp(), meta: { to: recipientId }
+      });
+
+      const t2 = doc(collection(db, 'transactions'));
+      tx.set(t2, {
+        userId: recipientId, type:'receive',
+        coins: +sendAmount, relatedMatch: null,
+        createdAt: serverTimestamp(), meta: { from: currentUser.uid }
+      });
+    });
+
+    await loadUserData(currentUser.uid);
+    closeModal('send-modal');
+    showToast(`✅ 🪙 ${sendAmount.toLocaleString()} la diray!`, 'success');
+    document.getElementById('send_recipient').value = '';
+    document.getElementById('send_amount').value    = '';
+  } catch (err) {
+    setLoading(btn, false);
+    showToast(err.message, 'error');
+  }
+}
+
+// ── 23. TRANSACTION HISTORY ────────────────────────────────
+function loadTransactionHistory(container) {
+  if (!container || !currentUser) return;
+
+  container.innerHTML = Array(4).fill(`
+    <div class="tx-item">
+      <div class="skeleton" style="width:40px;height:40px;border-radius:8px;flex-shrink:0"></div>
+      <div style="flex:1">
+        <div class="skeleton sk-line" style="width:70%"></div>
+        <div class="skeleton sk-line" style="width:40%"></div>
+      </div>
+    </div>`).join('');
+
+  const q = query(
+    collection(db, 'transactions'),
+    where('userId', '==', currentUser.uid),
+    orderBy('createdAt', 'desc'),
+    limit(30)
+  );
+
+  onSnapshot(q, snap => {
+    if (snap.empty) {
+      container.innerHTML = `
+        <p class="text-center text-muted p-md">
+          Wax transaction ah ma jiro weli
+        </p>`;
+      return;
+    }
+
+    const icons  = {
+      deposit_approved: '💰',
+      escrow_lock:      '🔒',
+      match_win:        '🏆',
+      match_loss:       '💸',
+      send:             '📤',
+      receive:          '📥',
+      refund:           '↩️'
+    };
+    const labels = {
+      deposit_approved: 'Lacag la keenay',
+      escrow_lock:      'Match escrow',
+      match_win:        'Guul Match',
+      match_loss:       'Khasaaro Match',
+      send:             'La diray',
+      receive:          'La helay',
+      refund:           'Dib loo celiyay'
+    };
+
+    container.innerHTML = snap.docs.map(d => {
+      const t        = d.data();
+      const isCredit = t.coins > 0;
+      const time     = t.createdAt?.toDate
+        ? t.createdAt.toDate().toLocaleDateString('so-SO') : 'Dhawaan';
+      return `
+        <div class="tx-item" role="listitem">
+          <div class="tx-icon">${icons[t.type] || '💫'}</div>
+          <div class="tx-info">
+            <div class="tx-title">${labels[t.type] || t.type}</div>
+            <div class="tx-date">${time}</div>
+          </div>
+          <div class="tx-amount ${isCredit ? 'credit' : 'debit'}">
+            ${isCredit ? '+' : ''}${(t.coins||0).toLocaleString()} 🪙
+          </div>
+        </div>`;
+    }).join('');
+  });
+}
+
+// ── 24. ADMIN: LOAD DEPOSIT REQUESTS ──────────────────────
+function loadDepositRequests(container) {
+  if (!container) return;
+  const adminRoles = ['administrator','owner','partner_manager'];
+  if (!adminRoles.includes(currentUserData?.role)) return;
+
+  const q = query(
+    collection(db, 'deposit_requests'),
+    where('status','==','pending'),
+    orderBy('createdAt','desc'),
+    limit(20)
+  );
+
+  onSnapshot(q, snap => {
+    if (snap.empty) {
+      container.innerHTML =
+        `<p class="text-muted" style="font-size:13px">✅ Pending requests ma jiro</p>`;
+      return;
+    }
+    container.innerHTML = snap.docs.map(d => {
+      const r = d.data();
+      return `
+        <div class="deposit-req-card">
+          <div class="deposit-req-meta">
+            <span class="deposit-req-coins">🪙 ${(r.coinsAmount||0).toLocaleString()}</span>
+            <span class="pending-badge">Sugaysa</span>
+          </div>
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">
+            💵 $${r.amountUSD} · ${r.company} · ${r.phoneSentFrom}
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);font-family:monospace;margin-bottom:10px;word-break:break-all">
+            ${r.ussdCode}
+          </div>
+          <div class="grid-2">
+            <button class="btn btn-primary btn-sm"
+              onclick="adminApproveDeposit('${d.id}','${r.userId}',${r.coinsAmount})">
+              ✅ Ogolow
+            </button>
+            <button class="btn btn-danger btn-sm"
+              onclick="adminRejectDeposit('${d.id}')">
+              ❌ Diid
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  });
+}
+
+// ── 25. ADMIN: APPROVE DEPOSIT ─────────────────────────────
+window.adminApproveDeposit = async function(reqId, userId, coinsAmount) {
+  if (!confirm(
+    `✅ Deposit ogolaan?\n🪙 ${coinsAmount.toLocaleString()} coins\n$${(coinsAmount*0.1).toFixed(2)}`
+  )) return;
+  if (!requireOnline()) return;
+
+  try {
+    await runTransaction(db, async tx => {
+      const reqRef   = doc(db, 'deposit_requests', reqId);
+      const userRef  = doc(db, 'users', userId);
+      const [rSnap, uSnap] = await Promise.all([tx.get(reqRef), tx.get(userRef)]);
+
+      if (!rSnap.exists())                   throw new Error('Request la ma helin');
+      if (rSnap.data().status !== 'pending') throw new Error('Horey loo xukumay');
+
+      tx.update(reqRef, {
+        status:     'approved',
+        reviewedBy: currentUser.uid,
+        reviewedAt: serverTimestamp()
+      });
+
+      tx.update(userRef, {
+        coinBalance: (uSnap.data().coinBalance || 0) + coinsAmount
+      });
+
+      const txRef = doc(collection(db, 'transactions'));
+      tx.set(txRef, {
+        userId, type:'deposit_approved', coins: coinsAmount,
+        relatedMatch: null, createdAt: serverTimestamp(),
+        meta: { reqId, approvedBy: currentUser.uid }
+      });
+
+      const logRef = doc(collection(db, 'adminLogs'));
+      tx.set(logRef, {
+        action:'approve_deposit', adminUid: currentUser.uid,
+        targetUserId: userId, reqId, coinsAmount,
+        createdAt: serverTimestamp()
+      });
+    });
+    showToast('✅ Deposit la ogolaaday! Coins waa la gudbiyay.', 'success');
+  } catch (err) {
+    showToast('Khalad: ' + err.message, 'error');
+  }
+};
+
+window.adminRejectDeposit = async function(reqId) {
+  if (!confirm('❌ Deposit-kan diidid?')) return;
+  if (!requireOnline()) return;
+  try {
+    await updateDoc(doc(db, 'deposit_requests', reqId), {
+      status:     'rejected',
+      reviewedBy: currentUser.uid,
+      reviewedAt: serverTimestamp()
+    });
+
+    const logRef = doc(collection(db, 'adminLogs'));
+    await addDoc(collection(db, 'adminLogs'), {
+      action:'reject_deposit', adminUid: currentUser.uid,
+      reqId, createdAt: serverTimestamp()
+    });
+    showToast('Deposit la diidiy', 'info');
+  } catch (err) {
+    showToast('Khalad: ' + err.message, 'error');
+  }
+};
+
+// ── 26. ADMIN: SET WINNER ──────────────────────────────────
+window.adminSetWinner = async function(matchId, winnerUid) {
+  if (!confirm(
+    `🏆 Winner set garee?\nUID: ${winnerUid.slice(0,16)}...`
+  )) return;
+  if (!requireOnline()) return;
+
+  try {
+    await runTransaction(db, async tx => {
+      const matchRef  = doc(db, 'matches', matchId);
+      const matchSnap = await tx.get(matchRef);
+      if (!matchSnap.exists()) throw new Error('Match la ma helin');
+
+      const m = matchSnap.data();
+      if (m.status !== 'locked') throw new Error('Match weli locked ma ahan');
+      if (m.winnerId)            throw new Error('Winner horey ayaa la dejiyay');
+      if (!m.joinedBy)           throw new Error('Labo ciyaartoy ma jiraan weli');
+
+      const loserUid  = winnerUid === m.createdBy ? m.joinedBy : m.createdBy;
+      const prize     = (m.stakeCoins || 0) * 2;
+
+      const winnerRef = doc(db, 'users', winnerUid);
+      const loserRef  = doc(db, 'users', loserUid);
+      const [wSnap, lSnap] = await Promise.all([
+        tx.get(winnerRef), tx.get(loserRef)
+      ]);
+
+      tx.update(matchRef, {
+        winnerId:    winnerUid,
+        status:      'done',
+        completedAt: serverTimestamp()
+      });
+
+      tx.update(winnerRef, {
+        coinBalance:   (wSnap.data().coinBalance   || 0) + prize,
+        escrowBalance: (wSnap.data().escrowBalance || 0) - m.stakeCoins
+      });
+
+      tx.update(loserRef, {
+        escrowBalance: (lSnap.data().escrowBalance || 0) - m.stakeCoins
+      });
+
+      const t1 = doc(collection(db, 'transactions'));
+      tx.set(t1, {
+        userId: winnerUid, type:'match_win',
+        coins: +prize, relatedMatch: matchId,
+        createdAt: serverTimestamp(), meta: { matchId, loserUid }
+      });
+
+      const t2 = doc(collection(db, 'transactions'));
+      tx.set(t2, {
+        userId: loserUid, type:'match_loss',
+        coins: -m.stakeCoins, relatedMatch: matchId,
+        createdAt: serverTimestamp(), meta: { matchId, winnerUid }
+      });
+
+      const log = doc(collection(db, 'adminLogs'));
+      tx.set(log, {
+        action:'set_winner', adminUid: currentUser.uid,
+        matchId, winnerUid, loserUid, prize,
+        createdAt: serverTimestamp()
+      });
+    });
+    showToast('🏆 Winner la dejiyay! Coins waa la qaybiyay.', 'success');
+  } catch (err) {
+    showToast('Khalad: ' + err.message, 'error');
+  }
+};
+
+// ── 27. FILTER CHIPS (dashboard) ──────────────────────────
+function initFilterChips(matchesContainer) {
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.filter-chip').forEach(c => {
+        c.classList.remove('active');
+        c.setAttribute('aria-selected','false');
+      });
+      chip.classList.add('active');
+      chip.setAttribute('aria-selected','true');
+      loadMatches(matchesContainer, chip.dataset.filter || 'all');
+    });
+  });
+}
+
+// ── 28. PROFILE: LOAD STATS ────────────────────────────────
+async function loadProfileStats(uid) {
+  try {
+    // Matches count
+    const allMatchesQ = query(
+      collection(db, 'matches'),
+      where('createdBy','==', uid),
+      limit(50)
+    );
+    const joinedMatchesQ = query(
+      collection(db, 'matches'),
+      where('joinedBy','==', uid),
+      limit(50)
+    );
+    const [createdSnap, joinedSnap] = await Promise.all([
+      getDocs(allMatchesQ),
+      getDocs(joinedMatchesQ)
+    ]);
+
+    const totalMatches = createdSnap.size + joinedSnap.size;
+
+    // Wins count
+    const winsQ = query(
+      collection(db, 'transactions'),
+      where('userId','==', uid),
+      where('type','==','match_win'),
+      limit(100)
+    );
+    const winsSnap = await getDocs(winsQ);
+    const totalWins = winsSnap.size;
+
+    // Update profile UI
+    const statCoins   = document.getElementById('stat-coins');
+    const statMatches = document.getElementById('stat-matches');
+    const statWins    = document.getElementById('stat-wins');
+    const statEscrow  = document.getElementById('stat-escrow');
+
+    if (statCoins)   statCoins.textContent   = (currentUserData?.coinBalance   || 0).toLocaleString();
+    if (statMatches) statMatches.textContent = totalMatches;
+    if (statWins)    statWins.textContent    = totalWins;
+    if (statEscrow)  statEscrow.textContent  = (currentUserData?.escrowBalance || 0).toLocaleString();
+  } catch (err) {
+    console.error('loadProfileStats:', err);
+  }
+}
+
+// ── 29. PROFILE: FILL UI ───────────────────────────────────
+function fillProfileUI() {
+  if (!currentUserData) return;
+
+  const u = currentUserData;
+
+  const nameEl    = document.getElementById('profile-name-display');
+  const emailEl   = document.getElementById('profile-email-display');
+  const fnameEl   = document.getElementById('info-fullname');
+  const infoEmail = document.getElementById('info-email');
+  const infoPhone = document.getElementById('info-phone');
+  const infoDate  = document.getElementById('info-createdat');
+  const avatarEl  = document.getElementById('profile-avatar-display');
+  const uidEl     = document.getElementById('profile-uid-display');
+  const roleBadge = document.getElementById('profile-role-badge');
+
+  const initials = (u.fullName || 'U')
+    .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+  if (nameEl)    nameEl.textContent    = u.fullName || '—';
+  if (emailEl)   emailEl.textContent   = u.email    || '—';
+  if (fnameEl)   fnameEl.textContent   = u.fullName || '—';
+  if (infoEmail) infoEmail.textContent = u.email    || '—';
+  if (infoPhone) infoPhone.textContent = u.phone    || 'La ma gelin';
+  if (avatarEl)  avatarEl.textContent  = initials;
+  if (uidEl)     uidEl.textContent     = 'UID: ' + (u.uid||'').slice(0, 18) + '...';
+
+  if (infoDate && u.createdAt?.toDate) {
+    infoDate.textContent = u.createdAt.toDate().toLocaleDateString('so-SO');
+  }
+
+  // Role badge
+  if (roleBadge) {
+    const roleConfig = {
+      owner:           { cls:'role-badge-owner',   icon:'👑', label:'Owner'           },
+      administrator:   { cls:'role-badge-admin',   icon:'🛡️', label:'Administrator'   },
+      partner_manager: { cls:'role-badge-admin',   icon:'🤝', label:'Partner Manager' },
+      support:         { cls:'role-badge-support', icon:'🎧', label:'Support'         },
+      agent:           { cls:'role-badge-support', icon:'📋', label:'Agent'           },
+      user:            { cls:'role-badge-user',    icon:'👤', label:'User'            }
+    };
+    const cfg = roleConfig[u.role] || roleConfig.user;
+    roleBadge.className = `role-badge ${cfg.cls}`;
+    roleBadge.textContent = `${cfg.icon} ${cfg.label}`;
+  }
+
+  // Pre-fill edit inputs with current values
+  const editName  = document.getElementById('edit_fullName');
+  const editPhone = document.getElementById('edit_phone');
+  if (editName)  editName.placeholder  = u.fullName || 'Magacaaga cusub';
+  if (editPhone) editPhone.placeholder = u.phone    || '+252...';
+}
+
+// ── 30. MAIN DOMContentLoaded ──────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+
+  const page = window.location.pathname.split('/').pop() || 'index.html';
+
+  initNavigation();
+
+  // Modal overlay tap = xidh
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) closeModal(overlay.id);
+    });
+  });
+
+  // ════════════════════════════════════════════════════════
+  // INDEX.HTML — Login / Register
+  // ════════════════════════════════════════════════════════
+  if (page === 'index.html' || page === '') {
+    await authGuard(false, 'dashboard.html');
+
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected','false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected','true');
+        document.querySelectorAll('.tab-content').forEach(c => {
+          c.classList.toggle('hidden', c.dataset.tab !== tab);
+        });
+      });
+    });
+
+    initPasswordToggles();
+
+    document.getElementById('login-form')
+      ?.addEventListener('submit', handleLogin);
+    document.getElementById('register-form')
+      ?.addEventListener('submit', handleSignup);
+    document.getElementById('btn_google')
+      ?.addEventListener('click', handleGoogleSignIn);
+    document.getElementById('btn_forgot_pw')
+      ?.addEventListener('click', window.handlePasswordReset);
+  }
+
+  // ════════════════════════════════════════════════════════
+  // DASHBOARD.HTML
+  // ════════════════════════════════════════════════════════
+  if (page === 'dashboard.html') {
+    await authGuard(true);
+
+    const matchesContainer = document.getElementById('matches-list');
+    loadMatches(matchesContainer, 'all');
+    initFilterChips(matchesContainer);
+
+    document.getElementById('btn_open_create')
+      ?.addEventListener('click', () => openModal('create-match-modal'));
+    document.getElementById('create-match-form')
+      ?.addEventListener('submit', handleCreateMatch);
+    document.getElementById('btn_logout')
+      ?.addEventListener('click', handleLogout);
+
+    // Admin panel
+    loadDepositRequests(document.getElementById('admin-deposits-container'));
+
+    // pending_join from matches.html
+    const pendingJoin = localStorage.getItem('pending_join');
+    if (pendingJoin) {
+      localStorage.removeItem('pending_join');
+      setTimeout(() => openMatchModal(pendingJoin), 600);
+    }
+
+    // open_create flag from other pages
+    if (localStorage.getItem('open_create') === '1') {
+      localStorage.removeItem('open_create');
+      setTimeout(() => openModal('create-match-modal'), 400);
+    }
+  }
+
+  // ════════════════════════════════════════════════════════
+  // WALLET.HTML
+  // ════════════════════════════════════════════════════════
+  if (page === 'wallet.html') {
+    await authGuard(true);
+
+    function updateWalletDisplay() {
+      const bal = currentUserData?.coinBalance   || 0;
+      const esc = currentUserData?.escrowBalance || 0;
+      const coinsEl  = document.getElementById('wallet-coin-balance');
+      const escrowEl = document.getElementById('wallet-escrow-balance');
+      const usdEl    = document.getElementById('wallet-usd-equiv');
+      if (coinsEl)  coinsEl.textContent  = bal.toLocaleString();
+      if (escrowEl) escrowEl.textContent = esc.toLocaleString();
+      if (usdEl)    usdEl.textContent    = (bal * 0.10).toFixed(2);
+    }
+
+    // Real-time balance
+    if (currentUser) {
+      onSnapshot(doc(db, 'users', currentUser.uid), snap => {
+        if (snap.exists()) {
+          currentUserData         = snap.data();
+          window._ematch_userdata = currentUserData;
+          updateWalletDisplay();
+          updateHeaderUI();
+        }
+      });
+    }
+
+    updateWalletDisplay();
+    loadTransactionHistory(document.getElementById('tx-list'));
+
+    document.getElementById('btn_open_deposit')
+      ?.addEventListener('click', () => openModal('deposit-modal'));
+    document.getElementById('deposit-form')
+      ?.addEventListener('submit', handleDeposit);
+    document.getElementById('btn_open_send')
+      ?.addEventListener('click', () => openModal('send-modal'));
+    document.getElementById('send-coins-form')
+      ?.addEventListener('submit', handleSendCoins);
+    document.getElementById('btn_logout')
+      ?.addEventListener('click', handleLogout);
+
+    // Deposit amount preview
+    document.getElementById('dep_amount')?.addEventListener('input', function() {
+      const coins   = Math.floor((parseFloat(this.value)||0) / 0.10);
+      const preview = document.getElementById('dep_preview_coins');
+      const hint    = document.getElementById('dep_coins_preview');
+      if (preview) preview.textContent = coins > 0 ? coins.toLocaleString() : '—';
+      if (hint)    hint.textContent    = coins > 0
+        ? `🪙 ${coins.toLocaleString()} coins la helayaa` : '🪙 Coins la helayo: —';
+    });
+
+    // Copy USSD
+    document.getElementById('btn_copy_ussd')?.addEventListener('click', () => {
+      const code = document.getElementById('ussd-code-display')?.textContent;
+      if (code) {
+        navigator.clipboard.writeText(code)
+          .then(()  => showToast('✅ USSD code la koobiyay', 'success'))
+          .catch(()  => showToast('Koobiyaynta waa fashilantay', 'error'));
+      }
+    });
+  }
+
+  // ════════════════════════════════════════════════════════
+  // PROFILE.HTML
+  // ════════════════════════════════════════════════════════
+  if (page === 'profile.html') {
+    await authGuard(true);
+
+    fillProfileUI();
+    await loadProfileStats(currentUser.uid);
+
+    // Real-time balance updates on profile
+    onSnapshot(doc(db, 'users', currentUser.uid), snap => {
+      if (snap.exists()) {
+        currentUserData         = snap.data();
+        window._ematch_userdata = currentUserData;
+        updateHeaderUI();
+
+        // Update live coin stats on profile
+        const statCoins  = document.getElementById('stat-coins');
+        const statEscrow = document.getElementById('stat-escrow');
+        if (statCoins)  statCoins.textContent  = (currentUserData.coinBalance  ||0).toLocaleString();
+        if (statEscrow) statEscrow.textContent = (currentUserData.escrowBalance||0).toLocaleString();
+      }
+    });
+
+    document.getElementById('btn_logout')
+      ?.addEventListener('click', handleLogout);
+
+    // Edit profile form
+    document.getElementById('edit-profile-form')
+      ?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const newName  = document.getElementById('edit_fullName')?.value.trim();
+        const newPhone = document.getElementById('edit_phone')?.value.trim();
+        const btn      = document.getElementById('btn_save_profile');
+
+        document.getElementById('edit_fullName_err').textContent = '';
+        document.getElementById('edit_phone_err').textContent    = '';
+
+        let valid = true;
+        if (newName  && newName.length < 2)   { document.getElementById('edit_fullName_err').textContent='Ugu yaraan 2 xaraf'; valid=false; }
+        if (newPhone && !validatePhone(newPhone)){ document.getElementById('edit_phone_err').textContent='Lambarka sax ma ahan'; valid=false; }
+        if (!newName && !newPhone) { showToast('Wax bedel ah geli', 'error'); return; }
+        if (!valid || !requireOnline()) return;
+
+        setLoading(btn, true);
+        try {
+          const updates = {};
+          if (newName)  updates.fullName = newName;
+          if (newPhone) updates.phone    = newPhone;
+
+          await updateDoc(doc(db, 'users', currentUser.uid), updates);
+
+          // Merge locally
+          Object.assign(currentUserData, updates);
+          window._ematch_userdata = currentUserData;
+
+          fillProfileUI();
+          updateHeaderUI();
+
+          if (document.getElementById('edit_fullName'))
+            document.getElementById('edit_fullName').value = '';
+          if (document.getElementById('edit_phone'))
+            document.getElementById('edit_phone').value   = '';
+
+          showToast('✅ Xogta waa la keydiyay!', 'success');
+        } catch (err) {
+          showToast('Khalad: ' + err.message, 'error');
+        } finally {
+          setLoading(btn, false);
+        }
+      });
+
+    // Password reset from profile
+    document.getElementById('menu_reset_pw')?.addEventListener('click', async () => {
+      const email = currentUserData?.email;
+      if (!email) { showToast('Email la ma helin', 'error'); return; }
+      if (!requireOnline()) return;
+      try {
+        await sendPasswordResetEmail(auth, email);
+        showToast('✅ Password reset email la diray!', 'success');
+      } catch (err) {
+        showToast('Khalad: ' + err.message, 'error');
+      }
+    });
+
+    // Share
+    document.getElementById('menu_share')?.addEventListener('click', () => {
+      if (navigator.share) {
+        navigator.share({
+          title: 'eMatch — Gaming Platform',
+          text:  'Kaalay eMatch ku ciyaar, tartam, coins guuleeso! 🎮',
+          url:   window.location.origin
+        }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(window.location.origin)
+          .then(() => showToast('✅ Link la koobiyay!', 'success'));
+      }
+    });
+
+    // About modal
+    document.getElementById('menu_about')
+      ?.addEventListener('click', () => openModal('about-modal'));
+
+    // Copy UID
+    window.copyUID = function() {
+      const uid = currentUser?.uid;
+      if (uid) {
+        navigator.clipboard.writeText(uid)
+          .then(() => showToast('✅ UID la koobiyay!', 'success'))
+          .catch(() => showToast('Koobiyaynta waa fashilantay', 'error'));
+      }
+    };
+  }
+
+  // ════════════════════════════════════════════════════════
+  // MATCHES.HTML
+  // ════════════════════════════════════════════════════════
+  if (page === 'matches.html') {
+    await authGuard(true);
+
+    // matches.html waxay leedahay script module-keeda gaar ah
+    // app.js waxay u gudbisaa: currentUser, db, userdata globals
+    // Exposed already via window._ematch_* above
+  }
+
+});

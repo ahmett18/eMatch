@@ -1,0 +1,552 @@
+
+<!DOCTYPE html>
+<html lang="so" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="description" content="eMatch — Wallet">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>eMatch — Wallet</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+</head>
+<body>
+<div id="app">
+
+  <!-- Offline Banner -->
+  <div id="offline-banner" class="offline-banner hidden" role="alert" aria-live="assertive">
+    📵 Internetka kuma xidna — ficilladaadu way ka xidantahay
+  </div>
+
+  <!-- ── Top Header ─────────────────────────────────────── -->
+  <header class="top-header">
+    <div class="logo">Wallet</div>
+    <div class="header-actions">
+      <div class="coin-chip"
+        title="Coin balance"
+        aria-label="Coin balance">
+        🪙 <span class="coin-balance-display">—</span>
+      </div>
+      <div class="avatar"
+        id="avatar-btn"
+        onclick="window.location.href='profile.html'"
+        title="Profile"
+        role="button"
+        tabindex="0"
+        aria-label="Profile fur">
+        ?
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main Content ───────────────────────────────────── -->
+  <main class="page-content" role="main">
+    <div class="p-md">
+
+      <!-- ── Wallet Hero Card ──────────────────────────── -->
+      <div class="wallet-hero" role="region" aria-label="Wallet balance">
+
+        <!-- Decorative icon -->
+        <div style="position:absolute;top:var(--sp-md);right:var(--sp-md);font-size:28px;opacity:.4">
+          💳
+        </div>
+
+        <div class="balance-label">COIN BALANCE</div>
+        <div class="balance-amount"
+          id="wallet-coin-balance"
+          aria-live="polite"
+          aria-label="Coin balance">
+          —
+        </div>
+        <div class="balance-sub">
+          ≈ $<span id="wallet-usd-equiv">0.00</span> USD
+          <span style="color:var(--text-muted);margin-left:4px">(10 coins = $1)</span>
+        </div>
+
+        <!-- Escrow Row -->
+        <div class="escrow-row">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span class="escrow-label">Escrow (Match ku jira):</span>
+          <span class="escrow-amount"
+            id="wallet-escrow-balance"
+            aria-live="polite">
+            —
+          </span>
+          <span style="font-size:12px;color:var(--text-muted)">🪙</span>
+        </div>
+      </div>
+
+      <!-- ── Action Buttons ────────────────────────────── -->
+      <div class="grid-2 mb-md">
+        <button
+          class="btn btn-gold"
+          id="btn_open_deposit"
+          aria-label="Coins ku shub — deposit">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5"  y1="12" x2="19" y2="12"/>
+          </svg>
+          Deposit
+        </button>
+        <button
+          class="btn btn-secondary"
+          id="btn_open_send"
+          aria-label="Coins dir">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          Dir
+        </button>
+      </div>
+
+      <!-- ── Rate Info Card ────────────────────────────── -->
+      <div class="card card-glass mb-md">
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="balance-label">QIIMAHA MAANTA</div>
+            <div style="font-size:16px;font-weight:700;color:var(--text-primary);margin-top:4px">
+              🪙 10 Coins = $1.00 USD
+            </div>
+          </div>
+          <div style="font-size:28px">💱</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.6">
+          Deposit min: <strong style="color:var(--text-secondary)">$1</strong> ·
+          Max: <strong style="color:var(--text-secondary)">$1,000</strong> ·
+          Provider: Hormuud · Somnet · Somtel
+        </div>
+      </div>
+
+      <!-- ── Transaction History ───────────────────────── -->
+      <div class="section-header" style="padding:0 0 var(--sp-sm)">
+        <h2>💸 Lacag Socodka</h2>
+      </div>
+
+      <div id="tx-list"
+        aria-live="polite"
+        aria-label="Transaction history"
+        role="list">
+        <!-- Skeleton -->
+        <div class="tx-item">
+          <div class="skeleton" style="width:40px;height:40px;border-radius:8px;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div class="skeleton sk-line" style="width:70%"></div>
+            <div class="skeleton sk-line" style="width:40%"></div>
+          </div>
+          <div class="skeleton" style="width:60px;height:16px;border-radius:4px"></div>
+        </div>
+        <div class="tx-item">
+          <div class="skeleton" style="width:40px;height:40px;border-radius:8px;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div class="skeleton sk-line" style="width:55%"></div>
+            <div class="skeleton sk-line" style="width:35%"></div>
+          </div>
+          <div class="skeleton" style="width:50px;height:16px;border-radius:4px"></div>
+        </div>
+        <div class="tx-item">
+          <div class="skeleton" style="width:40px;height:40px;border-radius:8px;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div class="skeleton sk-line" style="width:80%"></div>
+            <div class="skeleton sk-line" style="width:45%"></div>
+          </div>
+          <div class="skeleton" style="width:55px;height:16px;border-radius:4px"></div>
+        </div>
+        <div class="tx-item">
+          <div class="skeleton" style="width:40px;height:40px;border-radius:8px;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div class="skeleton sk-line" style="width:65%"></div>
+            <div class="skeleton sk-line" style="width:50%"></div>
+          </div>
+          <div class="skeleton" style="width:60px;height:16px;border-radius:4px"></div>
+        </div>
+      </div>
+
+      <!-- Logout -->
+      <div style="margin-top:var(--sp-xl);padding-bottom:var(--sp-sm)">
+        <button id="btn_logout" class="btn btn-ghost" aria-label="Ka bax">
+          🚪 Ka Bax
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ── Bottom Navigation ──────────────────────────────── -->
+  <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+
+    <!-- Home -->
+    <a class="nav-item"
+      data-page="dashboard.html"
+      href="dashboard.html"
+      aria-label="Home">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Home</span>
+      <span class="nav-tooltip" aria-hidden="true">Home</span>
+    </a>
+
+    <!-- Matchs -->
+    <a class="nav-item"
+      data-page="matches.html"
+      href="dashboard.html"
+      aria-label="Matches">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8"  y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      <span>Matchs</span>
+      <span class="nav-tooltip" aria-hidden="true">Matches</span>
+    </a>
+
+    <!-- Create (FAB) -->
+    <a class="nav-item create-btn"
+      href="dashboard.html"
+      aria-label="Match cusub abuur"
+      onclick="localStorage.setItem('open_create','1')">
+      <div class="nav-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5"  x2="12" y2="19"/>
+          <line x1="5"  y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>
+      <span style="color:var(--text-muted)">Abuur</span>
+      <span class="nav-tooltip" aria-hidden="true">Match Abuur</span>
+    </a>
+
+    <!-- Wallet (active) -->
+    <a class="nav-item active"
+      data-page="wallet.html"
+      href="wallet.html"
+      aria-label="Wallet"
+      aria-current="page">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 12V22H4V12"/>
+        <path d="M22 7H2v5h20V7z"/>
+        <path d="M12 22V7"/>
+        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+      </svg>
+      <span>Wallet</span>
+      <span class="nav-tooltip" aria-hidden="true">Wallet</span>
+    </a>
+
+    <!-- Profile -->
+    <a class="nav-item"
+      data-page="profile.html"
+      href="profile.html"
+      aria-label="Profile">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span>Profile</span>
+      <span class="nav-tooltip" aria-hidden="true">Profile</span>
+    </a>
+
+  </nav>
+
+</div>
+<!-- /app -->
+
+<!-- ════════════ MODALS ════════════════════════════════════ -->
+
+<!-- ── Deposit Modal ──────────────────────────────────── -->
+<div id="deposit-modal"
+  class="modal-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="deposit-modal-title">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="deposit-modal-title">💰 Coins Ku Shub</h2>
+      <button class="modal-close"
+        onclick="closeModal('deposit-modal')"
+        aria-label="Xidh">✕</button>
+    </div>
+
+    <form id="deposit-form" novalidate>
+
+      <!-- Amount -->
+      <div class="form-group">
+        <label for="dep_amount">Lacagta ($USD)</label>
+        <div class="input-wrap">
+          <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1"  x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          <input
+            type="number"
+            id="dep_amount"
+            placeholder="10.00"
+            min="1"
+            max="1000"
+            step="0.01"
+            inputmode="decimal"
+            autocomplete="off"
+            aria-label="Lacagta dollar ah"
+            aria-describedby="dep_amount_err dep_coins_preview">
+        </div>
+        <div class="error-msg" id="dep_amount_err" role="alert" aria-live="polite"></div>
+        <div class="field-hint" id="dep_coins_preview">🪙 Coins la helayo: —</div>
+      </div>
+
+      <!-- Phone -->
+      <div class="form-group">
+        <label for="dep_phone">Lambarka Lacagta Laga Dirayaa</label>
+        <div class="input-wrap">
+          <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13 19.79 19.79 0 0 1 1.61 4.35 2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.08 6.08l.94-.94a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          <input
+            type="tel"
+            id="dep_phone"
+            placeholder="+252 61 234 5678"
+            inputmode="tel"
+            autocomplete="tel"
+            aria-label="Lambarka telefonka"
+            aria-describedby="dep_phone_err">
+        </div>
+        <div class="error-msg" id="dep_phone_err" role="alert" aria-live="polite"></div>
+        <div class="field-hint">Tusaale: +252612345678</div>
+      </div>
+
+      <!-- Provider -->
+      <div class="form-group">
+        <label for="dep_provider">Mobile Money Provider</label>
+        <div class="input-wrap">
+          <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+            <line x1="1" y1="10" x2="23" y2="10"/>
+          </svg>
+          <select
+            id="dep_provider"
+            aria-label="Provider dooro"
+            aria-describedby="dep_provider_err">
+            <option value="">Provider dooro...</option>
+            <option value="Hormuud">📱 Hormuud — EVC Plus</option>
+            <option value="Somnet">📱 Somnet</option>
+            <option value="Somtel">📱 Somtel</option>
+          </select>
+        </div>
+        <div class="error-msg" id="dep_provider_err" role="alert" aria-live="polite"></div>
+      </div>
+
+      <!-- Live Preview -->
+      <div class="card mb-md"
+        style="background:rgba(0,230,118,.06);border-color:rgba(0,230,118,.2)">
+        <div class="flex justify-between items-center">
+          <span style="font-size:13px;color:var(--text-muted)">La helayo:</span>
+          <span style="font-size:18px;font-weight:900;color:var(--accent-green)">
+            🪙 <span id="dep_preview_coins">—</span>
+          </span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:6px">
+          $1 = 10 coins · Xaqiijinta: 5–30 daqiiqo
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn btn-gold" id="btn_deposit">
+        <span class="btn-text">📱 USSD Code Samee</span>
+        <div class="btn-spinner" style="border-top-color:#000"></div>
+      </button>
+
+    </form>
+  </div>
+</div>
+
+<!-- ── USSD Code Modal ─────────────────────────────────── -->
+<div id="ussd-modal"
+  class="modal-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="ussd-modal-title">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="ussd-modal-title">📱 USSD Code-kaaga</h2>
+      <button class="modal-close"
+        onclick="closeModal('ussd-modal')"
+        aria-label="Xidh">✕</button>
+    </div>
+
+    <!-- USSD Display -->
+    <div class="ussd-display">
+      <div class="ussd-code"
+        id="ussd-code-display"
+        aria-live="polite"
+        aria-label="USSD code">
+        *712*...#
+      </div>
+      <div class="ussd-instructions"
+        id="ussd-amount-display">
+        Lacagta: —
+      </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="card mb-md"
+      style="background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.2)">
+      <div style="font-size:13px;color:var(--text-secondary);line-height:1.7">
+        <div style="margin-bottom:6px">
+          <strong style="color:var(--text-primary)">Sida loo isticmaalo:</strong>
+        </div>
+        <div>1️⃣ Code-ka copy gare ama xifso</div>
+        <div>2️⃣ Taleefankaaga dialer-ka ku geli</div>
+        <div>3️⃣ Call ku dhufo — xaqiiji lacagta</div>
+        <div>4️⃣ SMS xaqiijin haddaad hesho, screenshots dir admin-ka</div>
+        <div style="margin-top:8px;color:var(--accent-gold)">
+          ⏳ <strong>5–30 daqiiqo</strong> gudahood coins-kaaga waa la kordhin doonaa
+        </div>
+      </div>
+    </div>
+
+    <!-- Copy Button -->
+    <button class="btn btn-secondary mb-sm"
+      id="btn_copy_ussd"
+      aria-label="USSD code clipboard-ka ku koobiyaa">
+      📋 Code Koobiyaa
+    </button>
+
+    <!-- Close -->
+    <button class="btn btn-ghost"
+      onclick="closeModal('ussd-modal')">
+      ✓ Waan Fahmay — Xidh
+    </button>
+
+  </div>
+</div>
+
+<!-- ── Send Coins Modal ────────────────────────────────── -->
+<div id="send-modal"
+  class="modal-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="send-modal-title">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="send-modal-title">📤 Coins Dir</h2>
+      <button class="modal-close"
+        onclick="closeModal('send-modal')"
+        aria-label="Xidh">✕</button>
+    </div>
+
+    <form id="send-coins-form" novalidate>
+
+      <!-- Recipient UID -->
+      <div class="form-group">
+        <label for="send_recipient">Qaabilaha UID</label>
+        <div class="input-wrap">
+          <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <input
+            type="text"
+            id="send_recipient"
+            placeholder="Firebase UID — Profile-ka laga helaa"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Qaabilaha UID"
+            aria-describedby="send_recipient_err">
+        </div>
+        <div class="error-msg" id="send_recipient_err" role="alert" aria-live="polite"></div>
+        <div class="field-hint">
+          UID-ka buuxa ku geli — Profile → Settings laga koobiyaa
+        </div>
+      </div>
+
+      <!-- Amount -->
+      <div class="form-group">
+        <label for="send_amount">Coins Tiradooda 🪙</label>
+        <div class="input-wrap">
+          <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <input
+            type="number"
+            id="send_amount"
+            placeholder="100"
+            min="1"
+            inputmode="numeric"
+            aria-label="Coins tirada"
+            aria-describedby="send_amount_err">
+        </div>
+        <div class="error-msg" id="send_amount_err" role="alert" aria-live="polite"></div>
+        <div class="field-hint">
+          Lacagtaada: 🪙 <span class="coin-balance-display">—</span> coins
+        </div>
+      </div>
+
+      <!-- Warning Card -->
+      <div class="card mb-md"
+        style="background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.2)">
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.6">
+          ⚠️ <strong style="color:var(--text-primary)">Digniin:</strong>
+          Transaction-kan ma dib loo celin karo.
+          UID-ka si aad ah u hubi ka hor inta aanad dirin.
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn btn-primary" id="btn_send_coins">
+        <span class="btn-text">📤 Coins Dir</span>
+        <div class="btn-spinner"></div>
+      </button>
+
+    </form>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module" src="js/app.js"></script>
+
+<!-- Deposit live preview (inline — no module needed) -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const amountInput = document.getElementById('dep_amount');
+    if (amountInput) {
+      amountInput.addEventListener('input', function () {
+        const amount  = parseFloat(this.value) || 0;
+        const coins   = Math.floor(amount / 0.10);
+        const preview = document.getElementById('dep_preview_coins');
+        const hint    = document.getElementById('dep_coins_preview');
+        const usdEl   = document.getElementById('wallet-usd-equiv');
+
+        if (preview) preview.textContent = coins > 0 ? coins.toLocaleString() : '—';
+        if (hint)    hint.textContent    = coins > 0
+          ? `🪙 ${coins.toLocaleString()} coins la helayaa`
+          : '🪙 Coins la helayo: —';
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

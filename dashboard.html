@@ -1,0 +1,490 @@
+
+<!DOCTYPE html>
+<html lang="so" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="description" content="eMatch — Dashboard">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>eMatch — Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+</head>
+<body>
+<div id="app">
+
+  <!-- Offline Banner -->
+  <div id="offline-banner" class="offline-banner hidden" role="alert" aria-live="assertive">
+    📵 Internetka kuma xidna — ficilladaadu way ka xidantahay
+  </div>
+
+  <!-- ── Top Header ─────────────────────────────────────── -->
+  <header class="top-header">
+    <div class="logo">eMatch</div>
+    <div class="header-actions">
+      <!-- Coin Chip -->
+      <div class="coin-chip"
+        onclick="window.location.href='wallet.html'"
+        title="Wallet-kaaga fur"
+        role="button"
+        tabindex="0"
+        aria-label="Coin balance — wallet fur">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        🪙 <span class="coin-balance-display">—</span>
+      </div>
+      <!-- Avatar -->
+      <div class="avatar"
+        id="avatar-btn"
+        onclick="window.location.href='profile.html'"
+        title="Profile-kaaga"
+        role="button"
+        tabindex="0"
+        aria-label="Profile fur">
+        ?
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main Content ───────────────────────────────────── -->
+  <main class="page-content" role="main">
+
+    <!-- ── Featured Carousel ──────────────────────────── -->
+    <section class="carousel" role="region" aria-label="Featured tournaments">
+      <div class="carousel-item c1">
+        <div class="carousel-text">
+          <h3>🏆 Weekend Tournament</h3>
+          <p>FIFA · 1,000 coins Prize Pool</p>
+        </div>
+      </div>
+      <div class="carousel-item c2">
+        <div class="carousel-text">
+          <h3>⚡ Flash Matches</h3>
+          <p>Hadda bilow — Ciyaar toos ah</p>
+        </div>
+      </div>
+      <div class="carousel-item c3">
+        <div class="carousel-text">
+          <h3>🎯 Free Fire League</h3>
+          <p>Heer: Pro · 500 coins entry</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Wallet Quick Summary ────────────────────────── -->
+    <div class="p-md">
+      <div class="card card-glass" style="padding:var(--sp-md)">
+        <div class="flex justify-between items-center">
+          <div>
+            <div class="balance-label">Lacagtaada</div>
+            <div style="font-size:24px;font-weight:900;color:var(--accent-green);margin-top:4px">
+              🪙 <span class="coin-balance-display">—</span>
+            </div>
+          </div>
+          <button
+            class="btn btn-gold btn-sm"
+            onclick="window.location.href='wallet.html'"
+            aria-label="Deposit — wallet fur">
+            + Deposit
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Filter Bar ──────────────────────────────────── -->
+    <div class="filter-bar" role="tablist" aria-label="Match filters">
+      <button class="filter-chip active"
+        data-filter="all"
+        role="tab"
+        aria-selected="true">
+        🎮 Dhammaan
+      </button>
+      <button class="filter-chip"
+        data-filter="open"
+        role="tab"
+        aria-selected="false">
+        🟢 Furan
+      </button>
+      <button class="filter-chip"
+        data-filter="locked"
+        role="tab"
+        aria-selected="false">
+        🔴 Socda
+      </button>
+      <button class="filter-chip"
+        data-filter="done"
+        role="tab"
+        aria-selected="false">
+        ✅ Dhammaaday
+      </button>
+    </div>
+
+    <!-- ── Matches Section ────────────────────────────── -->
+    <div class="section-header">
+      <h2>Matches</h2>
+      <button
+        id="btn_open_create"
+        class="btn btn-primary btn-sm"
+        aria-label="Match cusub abuur">
+        + Abuur
+      </button>
+    </div>
+
+    <!-- Matches List (JS fills this) -->
+    <div
+      id="matches-list"
+      class="p-md"
+      role="list"
+      aria-live="polite"
+      aria-label="Matches list">
+      <!-- Skeleton placeholders -->
+      <div class="card mb-md">
+        <div class="skeleton sk-block mb-md"></div>
+        <div class="skeleton sk-line" style="width:60%"></div>
+        <div class="skeleton sk-line" style="width:80%"></div>
+      </div>
+      <div class="card mb-md">
+        <div class="skeleton sk-block mb-md"></div>
+        <div class="skeleton sk-line" style="width:70%"></div>
+        <div class="skeleton sk-line" style="width:55%"></div>
+      </div>
+      <div class="card mb-md">
+        <div class="skeleton sk-block mb-md"></div>
+        <div class="skeleton sk-line" style="width:50%"></div>
+        <div class="skeleton sk-line" style="width:75%"></div>
+      </div>
+    </div>
+
+    <!-- ── Admin Panel (hidden — role check by JS) ────── -->
+    <div id="admin-panel" class="p-md hidden admin-only">
+      <div class="admin-section">
+        <div class="flex items-center justify-between mb-md">
+          <h3>⚙️ Admin Panel</h3>
+          <span class="admin-badge">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            ADMIN
+          </span>
+        </div>
+
+        <!-- Deposit Requests -->
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:var(--sp-md)">
+          💰 Deposit requests sugaya ogolashada:
+        </p>
+        <div id="admin-deposits-container">
+          <p class="text-muted" style="font-size:13px">Loading...</p>
+        </div>
+
+        <!-- Match Management -->
+        <div style="margin-top:var(--sp-lg);padding-top:var(--sp-md);border-top:1px solid var(--glass-border)">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:var(--sp-sm)">
+            🎮 Match management — winner set garee:
+          </p>
+          <div class="grid-2">
+            <input
+              type="text"
+              id="admin_match_id"
+              placeholder="Match ID"
+              style="font-size:13px;min-height:40px"
+              aria-label="Match ID">
+            <input
+              type="text"
+              id="admin_winner_uid"
+              placeholder="Winner UID"
+              style="font-size:13px;min-height:40px"
+              aria-label="Winner UID">
+          </div>
+          <button
+            class="btn btn-gold mt-sm"
+            style="min-height:40px;font-size:13px"
+            onclick="adminSetWinnerFromInputs()"
+            aria-label="Winner dejii">
+            🏆 Winner Dejii
+          </button>
+        </div>
+
+        <!-- Logout (Admin shortcut) -->
+        <div style="margin-top:var(--sp-lg);padding-top:var(--sp-md);border-top:1px solid var(--glass-border)">
+          <button
+            id="btn_logout"
+            class="btn btn-ghost"
+            style="min-height:40px;font-size:13px"
+            aria-label="Ka bax">
+            🚪 Ka Bax
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Logout (non-admin, shown in profile usually) ─ -->
+    <div class="p-md hidden" id="logout-section-user">
+      <button id="btn_logout_user" class="btn btn-ghost" onclick="handleLogout()">
+        🚪 Ka Bax
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ── Bottom Navigation ──────────────────────────────── -->
+  <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+
+    <!-- Home -->
+    <a class="nav-item active"
+      data-page="dashboard.html"
+      href="dashboard.html"
+      aria-label="Home"
+      aria-current="page">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Home</span>
+      <span class="nav-tooltip" aria-hidden="true">Home</span>
+    </a>
+
+    <!-- Matchs -->
+    <a class="nav-item"
+      data-page="matches.html"
+      href="dashboard.html"
+      aria-label="Matches">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      <span>Matchs</span>
+      <span class="nav-tooltip" aria-hidden="true">Matches</span>
+    </a>
+
+    <!-- Create (centre FAB) -->
+    <button class="nav-item create-btn"
+      id="nav_create"
+      aria-label="Match cusub abuur"
+      onclick="openModal('create-match-modal')">
+      <div class="nav-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5"  y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>
+      <span style="color:var(--text-muted)">Abuur</span>
+      <span class="nav-tooltip" aria-hidden="true">Match Abuur</span>
+    </button>
+
+    <!-- Wallet -->
+    <a class="nav-item"
+      data-page="wallet.html"
+      href="wallet.html"
+      aria-label="Wallet">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 12V22H4V12"/>
+        <path d="M22 7H2v5h20V7z"/>
+        <path d="M12 22V7"/>
+        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+      </svg>
+      <span>Wallet</span>
+      <span class="nav-tooltip" aria-hidden="true">Wallet</span>
+    </a>
+
+    <!-- Profile -->
+    <a class="nav-item"
+      data-page="profile.html"
+      href="profile.html"
+      aria-label="Profile">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span>Profile</span>
+      <span class="nav-tooltip" aria-hidden="true">Profile</span>
+    </a>
+
+  </nav>
+
+</div>
+<!-- /app -->
+
+<!-- ════════════ MODALS ════════════════════════════════════ -->
+
+<!-- ── Match Detail Modal ─────────────────────────────── -->
+<div id="match-modal"
+  class="modal-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Match faahfaahin">
+  <div class="modal-sheet">
+    <div id="match-modal-content">
+      <!-- JS fills: openMatchModal() -->
+      <div class="modal-handle"></div>
+      <div class="skeleton sk-block mb-md"></div>
+      <div class="skeleton sk-line" style="width:70%"></div>
+      <div class="skeleton sk-line" style="width:50%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Create Match Modal ─────────────────────────────── -->
+<div id="create-match-modal"
+  class="modal-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="create-modal-title">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 id="create-modal-title">🎮 Match Cusub Abuur</h2>
+      <button class="modal-close"
+        onclick="closeModal('create-match-modal')"
+        aria-label="Xidh">✕</button>
+    </div>
+
+    <form id="create-match-form" novalidate>
+
+      <!-- Platform -->
+      <div class="form-group">
+        <label for="cm_platform">Platform</label>
+        <div class="input-wrap">
+          <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          <select id="cm_platform" aria-label="Platform dooro" aria-describedby="cm_platform_err">
+            <option value="">Platform dooro...</option>
+            <option value="FIFA">⚽ FIFA</option>
+            <option value="FC Mobile">⚽ FC Mobile</option>
+            <option value="eFootball">⚽ eFootball</option>
+            <option value="NBA 2K">🏀 NBA 2K</option>
+            <option value="PUBG">🔫 PUBG Mobile</option>
+            <option value="Free Fire">🔫 Free Fire</option>
+            <option value="COD">🔫 Call of Duty Mobile</option>
+          </select>
+        </div>
+        <div class="error-msg" id="cm_platform_err" role="alert" aria-live="polite"></div>
+      </div>
+
+      <!-- Title (optional) -->
+      <div class="form-group">
+        <label for="cm_title">Cinwaan <span style="color:var(--text-muted)">(ikhtiyaari)</span></label>
+        <div class="input-wrap">
+          <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="17" y1="10" x2="3" y2="10"/>
+            <line x1="21" y1="6"  x2="3" y2="6"/>
+            <line x1="21" y1="14" x2="3" y2="14"/>
+            <line x1="17" y1="18" x2="3" y2="18"/>
+          </svg>
+          <input
+            type="text"
+            id="cm_title"
+            placeholder="Tusaale: Pro 1v1 — La ciyaar!">
+        </div>
+      </div>
+
+      <!-- Stake Coins -->
+      <div class="form-group">
+        <label for="cm_stake">Stake Coins 🪙</label>
+        <div class="input-wrap">
+          <svg class="input-icon" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8"  x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <input
+            type="number"
+            id="cm_stake"
+            placeholder="Ugu yaraan 10"
+            min="10"
+            inputmode="numeric"
+            aria-label="Stake coins tirada"
+            aria-describedby="cm_stake_err">
+        </div>
+        <div class="error-msg" id="cm_stake_err" role="alert" aria-live="polite"></div>
+        <div class="field-hint">
+          Ugu yaraan 10 coins · Lacagtaada: 🪙 <span class="coin-balance-display">—</span>
+        </div>
+      </div>
+
+      <!-- Info Card -->
+      <div class="card mb-md" style="background:rgba(0,230,118,.05);border-color:rgba(0,230,118,.2)">
+        <div style="font-size:13px;color:var(--text-secondary)">
+          ℹ️ Match abuurtaadii, coins-kaaga escrow-ga ayaa lagu dhejin doonaa ilaa match-ku dhammaan.
+          Adiga oo guulaystaa, labada ciil aad heli doontaa.
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn btn-primary" id="btn_create_match">
+        <span class="btn-text">🎮 Match Abuur</span>
+        <div class="btn-spinner"></div>
+      </button>
+
+    </form>
+  </div>
+</div>
+
+<!-- ── Confirm Admin Action Modal ─────────────────────── -->
+<div id="confirm-modal"
+  class="modal-overlay"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="confirm-modal-title">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="text-align:center;padding:var(--sp-md) 0">
+      <div style="font-size:48px;margin-bottom:var(--sp-md)" id="confirm-icon">⚠️</div>
+      <h2 id="confirm-modal-title" style="margin-bottom:var(--sp-sm)">Xaqiiji</h2>
+      <p id="confirm-modal-body" style="margin-bottom:var(--sp-lg)">
+        Ficilkan xaqiijisaa?
+      </p>
+      <div class="grid-2">
+        <button class="btn btn-ghost" onclick="closeModal('confirm-modal')">
+          Jooji
+        </button>
+        <button class="btn btn-danger" id="confirm-modal-action">
+          Xaqiiji
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module" src="js/app.js"></script>
+
+<!-- Admin helper (inline — needs global scope) -->
+<script>
+  function adminSetWinnerFromInputs() {
+    const matchId   = document.getElementById('admin_match_id')?.value.trim();
+    const winnerUid = document.getElementById('admin_winner_uid')?.value.trim();
+    if (!matchId || !winnerUid) {
+      alert('Match ID iyo Winner UID labadaba geli');
+      return;
+    }
+    // adminSetWinner is exposed globally from app.js
+    if (typeof adminSetWinner === 'function') {
+      adminSetWinner(matchId, winnerUid);
+    } else {
+      alert('JS weli load ma ahan — dib u isku day');
+    }
+  }
+</script>
+
+</body>
+</html>
