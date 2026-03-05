@@ -9,8 +9,115 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>eMatch — Gal</title>
-  <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+
+<script>
+(function(){
+  // ✅ MARKIIBA body hid — waxba ha muuqan
+  document.documentElement.style.visibility = 'hidden';
+
+  var st = document.createElement('style');
+  st.textContent = `
+    #ematch-loader {
+      position:fixed;inset:0;z-index:99999;
+      background:#0d1117;
+      display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;
+      transition:opacity 400ms ease;
+    }
+    #ematch-loader::before {
+      content:'';position:absolute;inset:0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 40%,rgba(0,230,118,.10) 0%,transparent 70%),
+        radial-gradient(ellipse 50% 60% at 80% 60%,rgba(59,130,246,.08) 0%,transparent 70%);
+      pointer-events:none;
+    }
+    @keyframes emSpin { to { transform:rotate(360deg); } }
+    @keyframes emPulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(.9);opacity:.7;} }
+    @keyframes emDot { 0%,80%,100%{transform:scale(1);opacity:.15;} 40%{transform:scale(1.5);opacity:.7;} }
+    .em-ring { position:relative;width:88px;height:88px; }
+    .em-ring svg { position:absolute;inset:0;animation:emSpin 1.4s linear infinite; }
+    .em-ring-icon { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;animation:emPulse 2s ease-in-out infinite; }
+    .em-brand { font-size:28px;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#00e676,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+    .em-tag { font-size:11px;font-weight:500;color:rgba(255,255,255,.3);letter-spacing:3px;text-transform:uppercase; }
+    .em-prog-wrap { width:160px;height:2px;background:rgba(255,255,255,.07);border-radius:99px;overflow:hidden;margin-top:12px; }
+    .em-prog-bar { height:100%;width:0%;background:linear-gradient(90deg,#00e676,#3b82f6);border-radius:99px;transition:width 220ms linear;box-shadow:0 0 8px rgba(0,230,118,.5); }
+    .em-status { font-size:11px;color:rgba(255,255,255,.25);letter-spacing:.5px;margin-top:10px;min-height:16px; }
+    .em-dots { position:absolute;bottom:44px;left:50%;transform:translateX(-50%);display:flex;gap:6px; }
+    .em-dot { width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.15);animation:emDot 1.4s ease-in-out infinite; }
+    .em-dot:nth-child(2){animation-delay:.18s;}
+    .em-dot:nth-child(3){animation-delay:.36s;}
+  `;
+  document.head.appendChild(st);
+
+  // ✅ Loader markiiba samee — DOMContentLoaded ma sugayno
+  var el = document.createElement('div');
+  el.id = 'ematch-loader';
+  el.innerHTML = `
+    <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0">
+      <div class="em-ring" style="margin-bottom:24px">
+        <svg viewBox="0 0 88 88">
+          <defs>
+            <linearGradient id="emGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#00e676"/>
+              <stop offset="100%" stop-color="#3b82f6"/>
+            </linearGradient>
+          </defs>
+          <circle cx="44" cy="44" r="40" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2.5"/>
+          <circle cx="44" cy="44" r="40" fill="none" stroke="url(#emGrad)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="60 220"/>
+        </svg>
+        <div class="em-ring-icon">🎮</div>
+      </div>
+      <div class="em-brand">eMatch</div>
+      <div class="em-tag">Gaming Arena</div>
+      <div class="em-prog-wrap"><div class="em-prog-bar" id="em-bar"></div></div>
+      <div class="em-status" id="em-txt">Xogta la soo qaadayaa...</div>
+    </div>
+    <div class="em-dots">
+      <div class="em-dot"></div>
+      <div class="em-dot"></div>
+      <div class="em-dot"></div>
+    </div>`;
+
+  // ✅ Body diyaar ka dib loader ku dar
+  document.addEventListener('DOMContentLoaded', function(){
+    document.documentElement.style.visibility = 'visible';
+    document.body.insertBefore(el, document.body.firstChild);
+
+    var bar = document.getElementById('em-bar');
+    var txt = document.getElementById('em-txt');
+    var steps = [
+      {p:20, t:'Xogta la soo qaadayaa...',  d:0   },
+      {p:45, t:'Firebase la xiriiraya...',   d:300 },
+      {p:70, t:'Xisaabta la hubinayaa...',  d:700 },
+      {p:88, t:'Diyaargarowga...',           d:1100},
+      {p:100,t:'Ku soo dhawow! ✅',          d:1400}
+    ];
+    steps.forEach(function(s){
+      setTimeout(function(){
+        if(bar) bar.style.width = s.p+'%';
+        if(txt) txt.textContent = s.t;
+      }, s.d);
+    });
+  });
+
+  // ✅ Hide function — app.js ayaa yeedha
+  window._hideLoader = function(){
+    var el = document.getElementById('ematch-loader');
+    if(!el) return;
+    el.style.opacity = '0';
+    setTimeout(function(){ if(el.parentNode) el.remove(); }, 420);
+  };
+
+  // Fallback — haddaan app.js wax qaban
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      if(document.getElementById('ematch-loader')) window._hideLoader();
+    }, 5000);
+  });
+
+})();
+</script>
 </head>
 <body>
 <div id="app">
